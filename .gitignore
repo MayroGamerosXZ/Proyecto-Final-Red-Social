@@ -13,6 +13,7 @@ out/
 # Build outputs
 dist/
 build/
+*.tsbuildinfo
 
 # Environment files
 .env
@@ -30,6 +31,8 @@ postgres_data/
 
 # Documentación de evidencias interna (solo local)
 GUIA_EVIDENCIAS.md
+pruebas_interactivas.html
+*.html
 *.doc
 *.docx
 docs/evidencias/
