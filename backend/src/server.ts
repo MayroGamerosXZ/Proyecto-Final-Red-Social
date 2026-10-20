@@ -63,11 +63,11 @@ app.use(errorHandler);
 
 // Iniciar servidor
 const PORT = env.PORT;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
-  console.log(`🚀 Servidor backend ejecutándose en: http://localhost:${PORT}`);
-  console.log(`📚 Documentación Swagger disponible en: http://localhost:${PORT}/api/docs`);
-  console.log(`⚡ WebSocket Server listo en: ws://localhost:${PORT}`);
+  console.log(`🚀 Servidor backend ejecutándose en puerto: ${PORT}`);
+  console.log(`📚 Documentación Swagger disponible en: /api/docs`);
+  console.log(`⚡ WebSocket Server activo`);
   console.log(`=======================================================`);
 });
 
