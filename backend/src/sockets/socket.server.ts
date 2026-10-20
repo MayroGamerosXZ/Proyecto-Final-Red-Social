@@ -1,0 +1,98 @@
+import { Server as HttpServer } from 'http';
+import { Server as SocketIOServer, Socket } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env';
+import { AuthUserPayload } from '../middlewares/authMiddleware';
+
+let io: SocketIOServer | null = null;
+
+export interface AuthenticatedSocket extends Socket {
+  user?: AuthUserPayload;
+}
+
+export const initSocketServer = (httpServer: HttpServer): SocketIOServer => {
+  const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+
+  io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+    transports: ['websocket', 'polling'],
+  });
+
+  // Middleware de autenticación de Socket.io
+  io.use((socket: AuthenticatedSocket, next) => {
+    const token =
+      socket.handshake.auth?.token ||
+      (socket.handshake.headers['authorization'] as string)?.replace('Bearer ', '');
+
+    if (!token) {
+      // Permitir conexión anónima solo para eventos públicos del feed
+      return next();
+    }
+
+    try {
+      const decoded = jwt.verify(token, env.JWT_SECRET) as AuthUserPayload;
+      socket.user = decoded;
+      next();
+    } catch (err) {
+      console.warn(`[Socket.io] Token inválido en handshake: ${(err as Error).message}`);
+      return next();
+    }
+  });
+
+  io.on('connection', (socket: AuthenticatedSocket) => {
+    const userId = socket.user?.userId;
+    console.log(`[Socket.io] Cliente conectado: ${socket.id} (Usuario: ${userId || 'Anónimo'})`);
+
+    // Si está autenticado, unirlo a su sala privada personal
+    if (userId) {
+      const userRoom = `user_${userId}`;
+      socket.join(userRoom);
+      console.log(`[Socket.io] Usuario ${userId} unido a sala: ${userRoom}`);
+    }
+
+    // Unirse a sala global del feed para recibir actualizaciones de posts
+    socket.join('feed_global');
+
+    socket.on('disconnect', (reason) => {
+      console.log(`[Socket.io] Cliente desconectado: ${socket.id} (${reason})`);
+    });
+  });
+
+  return io;
+};
+
+export const getIO = (): SocketIOServer => {
+  if (!io) {
+    throw new Error('Socket.io no ha sido inicializado aún.');
+  }
+  return io;
+};
+
+// Funciones utilitarias para emitir eventos
+export const emitNotificationToUser = (recipientId: string, notification: unknown) => {
+  if (!io) return;
+  io.to(`user_${recipientId}`).emit('notification:new', notification);
+};
+
+export const emitPostLikeUpdated = (postId: string, likesCount: number, isLiked: boolean, actorId: string) => {
+  if (!io) return;
+  io.to('feed_global').emit('post:like_updated', {
+    postId,
+    likesCount,
+    isLiked,
+    actorId,
+  });
+};
+
+export const emitCommentCreated = (postId: string, comment: unknown, commentsCount: number) => {
+  if (!io) return;
+  io.to('feed_global').emit('post:comment_created', {
+    postId,
+    comment,
+    commentsCount,
+  });
+};
