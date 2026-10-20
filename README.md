@@ -9,9 +9,9 @@ SocialPulse es una plataforma de red social moderna de alto rendimiento construi
 
 | Servicio | Entorno | Enlace Público |
 | :--- | :---: | :--- |
-| **Frontend Web (SSR)** | Producción (Vercel) | `https://proyecto-final-red-social.vercel.app` *(En despliegue)* |
-| **Backend REST API** | Producción (Render) | `https://proyecto-final-red-social.onrender.com` ✅ *(Operativo)* |
-| **Documentación Swagger** | Producción (Render) | `https://proyecto-final-red-social.onrender.com/api/docs` ✅ *(Operativo)* |
+| **Frontend Web (SSR)** | Producción (Vercel) | [https://proyecto-final-red-social.vercel.app](https://proyecto-final-red-social.vercel.app) ✅ *(Operativo)* |
+| **Backend REST API** | Producción (Render) | [https://proyecto-final-red-social.onrender.com](https://proyecto-final-red-social.onrender.com) ✅ *(Operativo)* |
+| **Documentación Swagger** | Producción (Render) | [https://proyecto-final-red-social.onrender.com/api/docs](https://proyecto-final-red-social.onrender.com/api/docs) ✅ *(Operativo)* |
 | **Base de Datos Relacional** | Nube (Neon PostgreSQL) | `ep-small-hat-b54y583b-pooler...aws.neon.tech` ✅ *(Operativo)* |
 
 ---
