@@ -192,6 +192,14 @@ Como parte de las buenas prácticas de ingeniería de software y despliegue cont
 - **Solución Implementada:** Se migró la imagen base a `node:22-slim` (Debian Bookworm con `glibc`), se instalaron los paquetes de sistema `openssl` y `ca-certificates`, y se configuraron los `binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]` en `schema.prisma`.
 - **Resultado:** Despliegue exitoso (`STATUS: Live`) con un tiempo de compilación óptimo de 28.2 segundos.
 
+### Incidencia 3: Error HTTP 413 (Payload Too Large) al subir imágenes locales
+- **Síntoma:** Al publicar un post con una fotografía local desde el navegador, la petición `POST /api/posts` fallaba con error HTTP `413 (request entity too large)`.
+- **Causa Raíz:** El middleware `express.json()` en Express tiene por defecto un límite estricto de `100 KB`. Las imágenes codificadas en Data URI (Base64) o payloads multimedia superan frecuentemente dicho umbral (ej. 162 KB o más).
+- **Solución Implementada:** 
+  1. Se elevó la cuota de parseo en el servidor Express a `50MB` mediante `express.json({ limit: '50mb' })` y `express.urlencoded({ limit: '50mb', extended: true })`.
+  2. Se flexibilizaron los esquemas de validación de Zod en `post.schema.ts` y `auth.schema.ts` para admitir de forma nativa tanto URLs absolutas (`http://`, `https://`) como cadenas en formato `data:image/`.
+- **Resultado:** Las publicaciones y perfiles con fotografías locales se procesan y almacenan sin restricciones de tamaño en toda la plataforma.
+
 ---
 
 ## 📋 Lista de Verificación de Criterios (15/15 Puntos)

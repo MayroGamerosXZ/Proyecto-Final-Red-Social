@@ -26,5 +26,12 @@ export const loginSchema = z.object({
 export const updateProfileSchema = z.object({
   fullName: z.string().min(2).max(60).optional(),
   bio: z.string().max(200).optional(),
-  avatarUrl: z.string().url('URL de avatar inválida').optional().or(z.literal('')),
+  avatarUrl: z
+    .string()
+    .refine(
+      (val) => !val || val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image/'),
+      { message: 'El avatar debe ser una URL válida o formato Data URI' }
+    )
+    .optional()
+    .or(z.literal('')),
 });

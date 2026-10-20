@@ -5,7 +5,14 @@ export const createPostSchema = z.object({
     .string()
     .min(1, 'El contenido de la publicación no puede estar vacío')
     .max(1000, 'El contenido no puede exceder 1000 caracteres'),
-  imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')),
+  imageUrl: z
+    .string()
+    .refine(
+      (val) => !val || val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image/'),
+      { message: 'La imagen debe ser una URL válida o formato Data URI' }
+    )
+    .optional()
+    .or(z.literal('')),
 });
 
 export const postIdParamSchema = z.object({
