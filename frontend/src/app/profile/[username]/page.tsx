@@ -2,7 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Calendar, MapPin, Sparkles } from 'lucide-react';
-import { ProfileFollowButton } from '../../../components/ProfileFollowButton';
+import { ProfileHeaderActions } from '../../../components/ProfileHeaderActions';
 import { PostCard } from '../../../components/PostCard';
 import { Post } from '../../../types';
 
@@ -87,12 +87,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <p className="text-xs sm:text-sm text-indigo-600 font-medium">@{profile.username}</p>
               </div>
 
-              {/* Botón interactivo de seguimiento */}
+              {/* Botón interactivo de seguimiento o editar perfil */}
               <div>
-                <ProfileFollowButton
-                  userId={profile.id}
-                  initialIsFollowing={!!profile.isFollowing}
-                />
+                <ProfileHeaderActions profileUser={profile} />
               </div>
             </div>
 
