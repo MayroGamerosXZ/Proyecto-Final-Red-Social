@@ -33,6 +33,31 @@ class ApiClient {
     return data;
   }
 
+  // Upload
+  async uploadImage(file: File): Promise<{ success: boolean; url: string }> {
+    const token = this.getToken();
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al subir la imagen');
+    }
+
+    return data;
+  }
+
   // Auth
   async login(payload: { email: string; password: string }) {
     return this.request<{ success: boolean; data: { user: any; token: string } }>('/api/auth/login', {
