@@ -9,10 +9,10 @@ SocialPulse es una plataforma de red social moderna de alto rendimiento construi
 
 | Servicio | Entorno | Enlace Público |
 | :--- | :---: | :--- |
-| **Frontend Web (SSR)** | Producción (Vercel) | `https://socialpulse-web.vercel.app` *(Próximamente activo)* |
-| **Backend REST API** | Producción (Render) | `https://socialpulse-api.onrender.com` *(Próximamente activo)* |
-| **Documentación Swagger** | Producción (Render) | `https://socialpulse-api.onrender.com/api/docs` *(Próximamente activo)* |
-| **Base de Datos Relacional** | Nube (Neon / Supabase) | `PostgreSQL 16 (SSL habilitado)` |
+| **Frontend Web (SSR)** | Producción (Vercel) | `https://proyecto-final-red-social.vercel.app` *(En despliegue)* |
+| **Backend REST API** | Producción (Render) | `https://proyecto-final-red-social.onrender.com` ✅ *(Operativo)* |
+| **Documentación Swagger** | Producción (Render) | `https://proyecto-final-red-social.onrender.com/api/docs` ✅ *(Operativo)* |
+| **Base de Datos Relacional** | Nube (Neon PostgreSQL) | `ep-small-hat-b54y583b-pooler...aws.neon.tech` ✅ *(Operativo)* |
 
 ---
 
@@ -174,6 +174,23 @@ cp .env.example .env.local
 npm install
 npm run dev
 ```
+
+---
+
+## 🛠️ Bitácora de Resolución de Incidencias Técnicas (DevOps & Despliegue)
+
+Como parte de las buenas prácticas de ingeniería de software y despliegue continuo, se documentan las incidencias técnicas resueltas durante el ciclo de vida del proyecto:
+
+### Incidencia 1: Localización del Dockerfile en estructura monorepo
+- **Síntoma:** Fallo de compilación en Render con el error `open Dockerfile: no such file or directory`.
+- **Causa Raíz:** Render busca por defecto el `Dockerfile` en el directorio raíz del repositorio, mientras que el servicio backend se alojaba en el subdirectorio `backend/`.
+- **Solución Implementada:** Se diseñó un `Dockerfile` en la raíz con contexto de compilación direccionado hacia `backend/`, y se generó el blueprint declarativo `render.yaml` para estandarizar el despliegue automático.
+
+### Incidencia 2: Incompatibilidad de librerías binarias OpenSSL en Alpine Linux (Prisma Engine)
+- **Síntoma:** `Error loading shared library libssl.so.1.1: No such file or directory (needed by ... libquery_engine-linux-musl.so.node)`.
+- **Causa Raíz:** Las versiones modernas de Alpine (`musl`) carecen de compatibilidad directa con las librerías dinámicas de OpenSSL que Prisma requiere en tiempo de ejecución.
+- **Solución Implementada:** Se migró la imagen base a `node:22-slim` (Debian Bookworm con `glibc`), se instalaron los paquetes de sistema `openssl` y `ca-certificates`, y se configuraron los `binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]` en `schema.prisma`.
+- **Resultado:** Despliegue exitoso (`STATUS: Live`) con un tiempo de compilación óptimo de 28.2 segundos.
 
 ---
 

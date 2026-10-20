@@ -28,7 +28,12 @@ postgres_data/
 *.sqlite
 *.sqlite-journal
 
-# IDE & OS
+# Documentación de evidencias interna (solo local)
+GUIA_EVIDENCIAS.md
+*.doc
+*.docx
+docs/evidencias/
+
 .vscode/
 .idea/
 .DS_Store
