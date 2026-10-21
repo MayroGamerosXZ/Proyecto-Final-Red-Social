@@ -42,6 +42,82 @@ export const createPost = async (req: AuthenticatedRequest, res: Response, next:
       data: {
         ...post,
         isLiked: false,
+        userReaction: null,
+        topReactions: [],
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePost = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+    const { content, imageUrl } = req.body;
+
+    const post = await prisma.post.findUnique({
+      where: { id },
+    });
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Publicación no encontrada',
+      });
+    }
+
+    if (post.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes autorización para editar esta publicación (solo el autor puede hacerlo)',
+      });
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id },
+      data: {
+        content: content !== undefined ? content : post.content,
+        imageUrl: imageUrl !== undefined ? (imageUrl || null) : post.imageUrl,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+        likes: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+      },
+    });
+
+    const userLike = updatedPost.likes.find((l) => l.userId === userId);
+    const topReactions = Array.from(new Set(updatedPost.likes.map((l) => l.emoji)));
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { likes, ...rest } = updatedPost;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Publicación actualizada exitosamente',
+      data: {
+        ...rest,
+        isLiked: !!userLike,
+        userReaction: userLike ? userLike.emoji : null,
+        topReactions,
       },
     });
   } catch (error) {
@@ -75,22 +151,25 @@ export const getGlobalFeed = async (req: Request, res: Response, next: NextFunct
             comments: true,
           },
         },
-        likes: currentUserId
-          ? {
-              where: { userId: currentUserId },
-              select: { id: true },
-            }
-          : false,
+        likes: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
       },
     });
 
     const formattedPosts = posts.map((post) => {
-      const isLiked = currentUserId ? (post.likes?.length ?? 0) > 0 : false;
+      const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
+      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, ...rest } = post;
       return {
         ...rest,
-        isLiked,
+        isLiked: !!userLike,
+        userReaction: userLike ? userLike.emoji : null,
+        topReactions,
       };
     });
 
@@ -110,14 +189,12 @@ export const getFollowingFeed = async (req: AuthenticatedRequest, res: Response,
     const limit = parseInt(req.query.limit as string, 10) || 20;
     const skip = (page - 1) * limit;
 
-    // Obtener los IDs de usuarios que sigue
     const following = await prisma.follow.findMany({
       where: { followerId: userId },
       select: { followingId: true },
     });
 
     const followingIds = following.map((f) => f.followingId);
-    // Incluir también los posts propios
     followingIds.push(userId);
 
     const posts = await prisma.post.findMany({
@@ -143,19 +220,24 @@ export const getFollowingFeed = async (req: AuthenticatedRequest, res: Response,
           },
         },
         likes: {
-          where: { userId },
-          select: { id: true },
+          select: {
+            emoji: true,
+            userId: true,
+          },
         },
       },
     });
 
     const formattedPosts = posts.map((post) => {
-      const isLiked = (post.likes?.length ?? 0) > 0;
+      const userLike = post.likes.find((l) => l.userId === userId);
+      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, ...rest } = post;
       return {
         ...rest,
-        isLiked,
+        isLiked: !!userLike,
+        userReaction: userLike ? userLike.emoji : null,
+        topReactions,
       };
     });
 
@@ -202,22 +284,25 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
             comments: true,
           },
         },
-        likes: currentUserId
-          ? {
-              where: { userId: currentUserId },
-              select: { id: true },
-            }
-          : false,
+        likes: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
       },
     });
 
     const formattedPosts = posts.map((post) => {
-      const isLiked = currentUserId ? (post.likes?.length ?? 0) > 0 : false;
+      const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
+      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, ...rest } = post;
       return {
         ...rest,
-        isLiked,
+        isLiked: !!userLike,
+        userReaction: userLike ? userLike.emoji : null,
+        topReactions,
       };
     });
 
@@ -270,6 +355,7 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
   try {
     const userId = req.user!.userId;
     const { id: postId } = req.params;
+    const chosenEmoji = req.body?.emoji || '❤️';
 
     const post = await prisma.post.findUnique({
       where: { id: postId },
@@ -282,7 +368,6 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
       });
     }
 
-    // Comprobar si ya le dio like
     const existingLike = await prisma.like.findUnique({
       where: {
         userId_postId: {
@@ -293,24 +378,38 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
     });
 
     let isLiked = false;
+    let userReaction: string | null = null;
 
     if (existingLike) {
-      // Quitar like
-      await prisma.like.delete({
-        where: { id: existingLike.id },
-      });
-      isLiked = false;
+      if (existingLike.emoji === chosenEmoji) {
+        // Mismo emoji: Quitar reacción (toggle off)
+        await prisma.like.delete({
+          where: { id: existingLike.id },
+        });
+        isLiked = false;
+        userReaction = null;
+      } else {
+        // Distinto emoji: Actualizar al nuevo emoji
+        await prisma.like.update({
+          where: { id: existingLike.id },
+          data: { emoji: chosenEmoji },
+        });
+        isLiked = true;
+        userReaction = chosenEmoji;
+      }
     } else {
-      // Dar like
+      // Nueva reacción con el emoji seleccionado
       await prisma.like.create({
         data: {
           userId,
           postId,
+          emoji: chosenEmoji,
         },
       });
       isLiked = true;
+      userReaction = chosenEmoji;
 
-      // Crear notificación para el dueño del post (si no es el mismo usuario)
+      // Notificar al autor si es otro usuario
       if (post.userId !== userId) {
         const notification = await prisma.notification.create({
           data: {
@@ -331,17 +430,20 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
           },
         });
 
-        // Emitir notificación en vivo por WebSocket al dueño del post
         emitNotificationToUser(post.userId, notification);
       }
     }
 
-    // Contar total actual de likes
-    const likesCount = await prisma.like.count({
+    // Calcular estadísticas de reacciones
+    const allLikes = await prisma.like.findMany({
       where: { postId },
+      select: { emoji: true },
     });
 
-    // Emitir actualización de contador en vivo a todos los clientes suscritos al feed
+    const likesCount = allLikes.length;
+    const topReactions = Array.from(new Set(allLikes.map((l) => l.emoji))).slice(0, 3);
+
+    // Emitir por WebSocket
     emitPostLikeUpdated(postId, likesCount, isLiked, userId);
 
     return res.status(200).json({
@@ -350,6 +452,8 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
         postId,
         likesCount,
         isLiked,
+        userReaction,
+        topReactions,
       },
     });
   } catch (error) {
@@ -396,7 +500,6 @@ export const createComment = async (req: AuthenticatedRequest, res: Response, ne
       where: { postId },
     });
 
-    // Crear notificación para el dueño del post si es otro usuario
     if (post.userId !== userId) {
       const notification = await prisma.notification.create({
         data: {
@@ -420,7 +523,6 @@ export const createComment = async (req: AuthenticatedRequest, res: Response, ne
       emitNotificationToUser(post.userId, notification);
     }
 
-    // Emitir evento en vivo de comentario creado
     emitCommentCreated(postId, comment, commentsCount);
 
     return res.status(201).json({

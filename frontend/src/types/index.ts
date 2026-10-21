@@ -32,6 +32,8 @@ export interface Post {
     comments: number;
   };
   isLiked?: boolean;
+  userReaction?: string | null;
+  topReactions?: string[];
 }
 
 export interface Comment {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createPost,
+  updatePost,
   getGlobalFeed,
   getFollowingFeed,
   getUserPosts,
@@ -102,6 +103,33 @@ router.get('/user/:username', getUserPosts);
 /**
  * @openapi
  * /api/posts/{id}:
+ *   put:
+ *     tags:
+ *       - Publicaciones
+ *     summary: Editar una publicación propia
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *               imageUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Publicación actualizada correctamente
+ *       403:
+ *         description: No autorizado
  *   delete:
  *     tags:
  *       - Publicaciones
@@ -122,6 +150,7 @@ router.get('/user/:username', getUserPosts);
  *       404:
  *         description: Publicación no encontrada
  */
+router.put('/:id', authenticateJWT, validateParams(postIdParamSchema), validateBody(createPostSchema), updatePost);
 router.delete('/:id', authenticateJWT, validateParams(postIdParamSchema), deletePost);
 
 /**

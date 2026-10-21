@@ -69,6 +69,7 @@ model Like {
   id        String   @id @default(uuid())
   postId    String   @map("post_id")
   userId    String   @map("user_id")
+  emoji     String   @default("❤️")
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relaciones

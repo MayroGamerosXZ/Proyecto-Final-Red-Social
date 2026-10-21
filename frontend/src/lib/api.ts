@@ -97,19 +97,27 @@ class ApiClient {
     });
   }
 
+  async updatePost(id: string, payload: { content?: string; imageUrl?: string }) {
+    return this.request<{ success: boolean; data: any }>(`/api/posts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
   async deletePost(id: string) {
     return this.request<{ success: boolean; message: string }>(`/api/posts/${id}`, {
       method: 'DELETE',
     });
   }
 
-  async toggleLike(postId: string) {
-    return this.request<{ success: boolean; data: { postId: string; likesCount: number; isLiked: boolean } }>(
-      `/api/posts/${postId}/like`,
-      {
-        method: 'POST',
-      }
-    );
+  async toggleLike(postId: string, emoji = '❤️') {
+    return this.request<{
+      success: boolean;
+      data: { postId: string; likesCount: number; isLiked: boolean; userReaction: string | null; topReactions: string[] };
+    }>(`/api/posts/${postId}/like`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji }),
+    });
   }
 
   async getComments(postId: string) {
