@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CreatePostCard } from '../components/CreatePostCard';
 import { PostCard } from '../components/PostCard';
 import { Post, User } from '../types';
@@ -10,14 +11,25 @@ import { Sparkles, Users, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function FeedPage() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
   const [tab, setTab] = useState<'global' | 'following'>('global');
   const [posts, setPosts] = useState<Post[]>([]);
   const [suggestions, setSuggestions] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargar publicaciones según la pestaña activa
+  // Requerimiento primario: Si no está autenticado, redirigir inmediatamente a /login
   useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Cargar publicaciones solo si el usuario está autenticado
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     setLoading(true);
     const fetchPosts = tab === 'global' ? api.getGlobalFeed() : api.getFollowingFeed();
 
@@ -33,6 +45,8 @@ export default function FeedPage() {
 
   // Cargar usuarios sugeridos
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     api
       .getSuggestions()
       .then((res) => {
@@ -60,6 +74,21 @@ export default function FeedPage() {
     }
   };
 
+  // Pantalla de carga mientras se valida la sesión en el inicio
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 animate-pulse">
+          <Sparkles className="w-6 h-6" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-bold text-slate-800">Verificando sesión...</p>
+          <p className="text-xs text-slate-400 mt-0.5">Redirigiendo al inicio de sesión seguro</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       {/* Columna Principal: Feed */}
@@ -77,22 +106,20 @@ export default function FeedPage() {
             <Sparkles className="w-3.5 h-3.5" />
             <span>Para ti</span>
           </button>
-          {isAuthenticated && (
-            <button
-              onClick={() => setTab('following')}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
-                tab === 'following'
-                  ? 'bg-white text-indigo-600 shadow-sm shadow-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Siguiendo</span>
-            </button>
-          )}
+          <button
+            onClick={() => setTab('following')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
+              tab === 'following'
+                ? 'bg-white text-indigo-600 shadow-sm shadow-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Siguiendo</span>
+          </button>
         </div>
 
-        {/* Formulario de creación de post */}
+        {/* Formulario de creación de post con selector de fotos */}
         <CreatePostCard onPostCreated={handlePostCreated} />
 
         {/* Lista de publicaciones */}
@@ -159,15 +186,13 @@ export default function FeedPage() {
                     </div>
                   </Link>
 
-                  {isAuthenticated && (
-                    <button
-                      onClick={() => handleFollowSuggestion(u.id)}
-                      className="flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex-shrink-0"
-                    >
-                      <UserPlus className="w-3 h-3" />
-                      <span>Seguir</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleFollowSuggestion(u.id)}
+                    className="flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex-shrink-0"
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    <span>Seguir</span>
+                  </button>
                 </div>
               ))}
             </div>
@@ -184,10 +209,10 @@ export default function FeedPage() {
             Explora y prueba en vivo los endpoints REST interactivos de la red social.
           </p>
           <a
-            href="http://localhost:5000/api/docs"
+            href="https://proyecto-final-red-social.onrender.com/api/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mt-3 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold transition-colors"
+            className="inline-block mt-3 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold transition-colors shadow"
           >
             Abrir /api/docs →
           </a>
