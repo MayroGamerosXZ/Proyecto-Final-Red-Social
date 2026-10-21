@@ -13,6 +13,68 @@ SocialPulse es una plataforma de red social moderna de alto rendimiento construi
 | **Backend REST API** | Producción (Render) | [https://proyecto-final-red-social.onrender.com](https://proyecto-final-red-social.onrender.com) ✅ *(Operativo)* |
 | **Documentación Swagger** | Producción (Render) | [https://proyecto-final-red-social.onrender.com/api/docs](https://proyecto-final-red-social.onrender.com/api/docs) ✅ *(Operativo)* |
 | **Base de Datos Relacional** | Nube (Neon PostgreSQL) | `ep-small-hat-b54y583b-pooler...aws.neon.tech` ✅ *(Operativo)* |
+| **Repositorio GitHub** | Código Fuente Oficial | [https://github.com/MayroGamerosXZ/Proyecto-Final-Red-Social](https://github.com/MayroGamerosXZ/Proyecto-Final-Red-Social) ✅ *(Sincronizado)* |
+
+---
+
+## 🧭 Directorio de Vistas del Frontend (Enlaces Directos)
+
+Puedes acceder directamente a cualquiera de las rutas del frontend desplegadas en Vercel:
+
+| Vista | Ruta | Descripción y Funcionalidad |
+| :--- | :--- | :--- |
+| **Feed Principal** | [`/`](https://proyecto-final-red-social.vercel.app/) | Feed con pestañas *Para ti* y *Siguiendo*, publicación con subida de fotos y contadores en vivo. |
+| **Iniciar Sesión** | [`/login`](https://proyecto-final-red-social.vercel.app/login) | Formulario de autenticación con validación visual y generación de sesión JWT. |
+| **Crear Cuenta** | [`/register`](https://proyecto-final-red-social.vercel.app/register) | Registro de nuevos usuarios con hash de contraseña `bcrypt` y validación Zod. |
+| **Perfil: Mayro Gameros** | [`/profile/mayro_xz`](https://proyecto-final-red-social.vercel.app/profile/mayro_xz) | Perfil con **Server-Side Rendering (SSR)**, edición de foto/avatar y conteo de seguidores. |
+| **Perfil: Carlos Mendoza** | [`/profile/carlos_dev`](https://proyecto-final-red-social.vercel.app/profile/carlos_dev) | Perfil SSR, botón interactivo de *Seguir/Dejar de seguir* y lista de publicaciones. |
+| **Perfil: Ana Gómez** | [`/profile/ana_tech`](https://proyecto-final-red-social.vercel.app/profile/ana_tech) | Perfil SSR con publicaciones multimedia y relaciones sociales en tiempo real. |
+
+---
+
+## 📡 Catálogo de Endpoints de la API (Para Pruebas Rápidas)
+
+Todos los endpoints están desplegados en Render y responden públicamente en formato JSON:
+
+### 1. Endpoints GET de Acceso Directo (Pruébalos en tu Navegador)
+
+| Método | Endpoint | Enlace Directo de Prueba | Descripción |
+| :---: | :--- | :--- | :--- |
+| `GET` | `/api/health` | [Probar en vivo ↗](https://proyecto-final-red-social.onrender.com/api/health) | Uptime, estado del servidor y entorno de ejecución. |
+| `GET` | `/api/docs` | [Abrir Swagger UI ↗](https://proyecto-final-red-social.onrender.com/api/docs) | Documentación interactiva OpenAPI 3.0 para probar todas las rutas. |
+| `GET` | `/api/posts/feed` | [Ver JSON en vivo ↗](https://proyecto-final-red-social.onrender.com/api/posts/feed) | Feed global con publicaciones, autores, likes y comentarios. |
+| `GET` | `/api/users/mayro_xz` | [Ver JSON en vivo ↗](https://proyecto-final-red-social.onrender.com/api/users/mayro_xz) | Información pública del perfil y estadísticas de seguidores. |
+| `GET` | `/api/users/carlos_dev` | [Ver JSON en vivo ↗](https://proyecto-final-red-social.onrender.com/api/users/carlos_dev) | Perfil de usuario Carlos Mendoza en Neon PostgreSQL. |
+| `GET` | `/api/posts/user/mayro_xz` | [Ver JSON en vivo ↗](https://proyecto-final-red-social.onrender.com/api/posts/user/mayro_xz) | Todas las publicaciones creadas por @mayro_xz. |
+| `GET` | `/api/users/suggestions` | [Ver JSON en vivo ↗](https://proyecto-final-red-social.onrender.com/api/users/suggestions) | Lista de usuarios recomendados para seguir en la barra lateral. |
+
+### 2. Endpoints de Mutación y Seguridad (Vía Frontend o Swagger / Postman)
+
+| Método | Endpoint | Cabecera / Payload Requerido | Descripción |
+| :---: | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Body JSON: `{ username, email, password, fullName }` | Registra un usuario y retorna token JWT. |
+| `POST` | `/api/auth/login` | Body JSON: `{ email, password }` | Valida credenciales contra el hash Bcrypt. |
+| `GET` | `/api/auth/me` | `Authorization: Bearer <token>` | Obtiene los datos del usuario autenticado. |
+| `POST` | `/api/upload` | `multipart/form-data: image` + Bearer | Sube una imagen local desde el dispositivo. |
+| `POST` | `/api/posts` | Body JSON: `{ content, imageUrl? }` + Bearer | Crea una nueva publicación (texto y/o foto). |
+| `DELETE`| `/api/posts/:id` | `Authorization: Bearer <token>` | Elimina una publicación propia. |
+| `POST` | `/api/posts/:id/like` | `Authorization: Bearer <token>` | Toggle Like en vivo con evento WebSocket. |
+| `POST` | `/api/posts/:id/comments` | Body JSON: `{ content }` + Bearer | Agrega un comentario y emite evento en caliente. |
+| `GET` | `/api/posts/:id/comments` | Público | Lista los comentarios ordenados de un post. |
+| `POST` | `/api/users/:id/follow` | `Authorization: Bearer <token>` | Seguir a un usuario y emitir notificación. |
+| `DELETE`| `/api/users/:id/follow` | `Authorization: Bearer <token>` | Dejar de seguir a un usuario. |
+| `GET` | `/api/notifications` | `Authorization: Bearer <token>` | Historial de notificaciones en vivo. |
+| `PATCH`| `/api/notifications/read-all` | `Authorization: Bearer <token>` | Marca todas las notificaciones como leídas. |
+
+---
+
+## 👥 Credenciales Oficiales de Prueba (Base de Datos Inicial)
+
+| Usuario | Correo Electrónico | Contraseña | Rol / Propósito |
+| :--- | :--- | :--- | :--- |
+| **Mayro Gameros** | `mayro@example.com` | `Password123!` | Cuenta Principal / Creador (`@mayro_xz`) |
+| **Carlos Mendoza** | `carlos@example.com` | `Password123!` | Usuario para prueba de doble ventana (`@carlos_dev`) |
+| **Ana Gómez** | `ana@example.com` | `Password123!` | Diseñadora UI/UX (`@ana_tech`) |
 
 ---
 
