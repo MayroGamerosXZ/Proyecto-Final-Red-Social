@@ -9,6 +9,8 @@ import {
   toggleLike,
   createComment,
   getComments,
+  toggleBookmark,
+  getSavedPosts,
 } from '../controllers/post.controller';
 import { authenticateJWT } from '../middlewares/authMiddleware';
 import { validateBody, validateParams } from '../middlewares/validateRequest';
@@ -78,6 +80,23 @@ router.get('/feed', getGlobalFeed);
  *         description: No autorizado
  */
 router.get('/feed/following', authenticateJWT, getFollowingFeed);
+
+/**
+ * @openapi
+ * /api/posts/saved:
+ *   get:
+ *     tags:
+ *       - Guardados / Marcadores
+ *     summary: Obtener todas las publicaciones guardadas por el usuario autenticado
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de publicaciones guardadas
+ *       401:
+ *         description: No autorizado
+ */
+router.get('/saved', authenticateJWT, getSavedPosts);
 
 /**
  * @openapi
@@ -152,6 +171,31 @@ router.get('/user/:username', getUserPosts);
  */
 router.put('/:id', authenticateJWT, validateParams(postIdParamSchema), validateBody(createPostSchema), updatePost);
 router.delete('/:id', authenticateJWT, validateParams(postIdParamSchema), deletePost);
+
+/**
+ * @openapi
+ * /api/posts/{id}/bookmark:
+ *   post:
+ *     tags:
+ *       - Guardados / Marcadores
+ *     summary: Guardar o quitar de guardados una publicación (Toggle Bookmark)
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Estado de guardado alternado exitosamente
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Publicación no encontrada
+ */
+router.post('/:id/bookmark', authenticateJWT, validateParams(postIdParamSchema), toggleBookmark);
 
 /**
  * @openapi

@@ -163,13 +163,15 @@ export const getGlobalFeed = async (req: Request, res: Response, next: NextFunct
     const formattedPosts = posts.map((post) => {
       const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
       const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const isBookmarked = Boolean(currentUserId && (post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { likes, ...rest } = post;
+      const { likes, bookmarks, ...rest } = post as any;
       return {
         ...rest,
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        isBookmarked,
       };
     });
 
@@ -296,13 +298,15 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
     const formattedPosts = posts.map((post) => {
       const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
       const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const isBookmarked = Boolean(currentUserId && (post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { likes, ...rest } = post;
+      const { likes, bookmarks, ...rest } = post as any;
       return {
         ...rest,
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        isBookmarked,
       };
     });
 
@@ -557,6 +561,126 @@ export const getComments = async (req: Request, res: Response, next: NextFunctio
     return res.status(200).json({
       success: true,
       data: comments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleBookmark = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const { id: postId } = req.params;
+
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Publicación no encontrada',
+      });
+    }
+
+    const existingBookmark = await prisma.bookmark.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existingBookmark) {
+      await prisma.bookmark.delete({
+        where: { id: existingBookmark.id },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Publicación eliminada de tus guardados',
+        data: {
+          postId,
+          isBookmarked: false,
+        },
+      });
+    } else {
+      await prisma.bookmark.create({
+        data: {
+          userId,
+          postId,
+        },
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Publicación guardada exitosamente en tus marcadores',
+        data: {
+          postId,
+          isBookmarked: true,
+        },
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSavedPosts = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        post: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                fullName: true,
+                avatarUrl: true,
+              },
+            },
+            _count: {
+              select: {
+                likes: true,
+                comments: true,
+              },
+            },
+            likes: {
+              select: {
+                emoji: true,
+                userId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const formattedPosts = bookmarks.map((b) => {
+      const post = b.post;
+      const userLike = post.likes.find((l) => l.userId === userId);
+      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { likes, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: !!userLike,
+        userReaction: userLike ? userLike.emoji : null,
+        topReactions,
+        isBookmarked: true,
+        bookmarkedAt: b.createdAt,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: formattedPosts,
     });
   } catch (error) {
     next(error);

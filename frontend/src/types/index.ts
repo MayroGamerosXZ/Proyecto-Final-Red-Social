@@ -34,6 +34,7 @@ export interface Post {
   isLiked?: boolean;
   userReaction?: string | null;
   topReactions?: string[];
+  isBookmarked?: boolean;
 }
 
 export interface Comment {
@@ -70,3 +71,41 @@ export interface Notification {
     imageUrl?: string | null;
   } | null;
 }
+
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  sender?: {
+    id: string;
+    username: string;
+    fullName: string;
+    avatarUrl?: string | null;
+  };
+}
+
+export interface Conversation {
+  user: {
+    id: string;
+    username: string;
+    fullName: string;
+    avatarUrl?: string | null;
+  };
+  lastMessage: {
+    id: string;
+    content: string;
+    createdAt: string;
+    senderId: string;
+    isRead: boolean;
+  };
+  unreadCount: number;
+}
+
+export interface SearchResults {
+  users: User[];
+  posts: Post[];
+}
+

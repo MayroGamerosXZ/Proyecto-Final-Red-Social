@@ -177,6 +177,45 @@ class ApiClient {
       method: 'PATCH',
     });
   }
+
+  // Guardados / Marcadores (Bookmarks)
+  async toggleBookmark(postId: string) {
+    return this.request<{ success: boolean; message: string; data: { postId: string; isBookmarked: boolean } }>(
+      `/api/posts/${postId}/bookmark`,
+      {
+        method: 'POST',
+      }
+    );
+  }
+
+  async getSavedPosts() {
+    return this.request<{ success: boolean; data: any[] }>('/api/posts/saved');
+  }
+
+  // Mensajería Directa (Chat)
+  async getConversations() {
+    return this.request<{ success: boolean; data: any[] }>('/api/messages/conversations');
+  }
+
+  async getMessages(userId: string) {
+    return this.request<{ success: boolean; data: { user: any; messages: any[] } }>(
+      `/api/messages/${userId}`
+    );
+  }
+
+  async sendMessage(userId: string, content: string) {
+    return this.request<{ success: boolean; message: string; data: any }>(`/api/messages/${userId}`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  // Búsqueda Avanzada
+  async search(query: string) {
+    return this.request<{ success: boolean; data: { users: any[]; posts: any[] } }>(
+      `/api/search?q=${encodeURIComponent(query)}`
+    );
+  }
 }
 
 export const api = new ApiClient();

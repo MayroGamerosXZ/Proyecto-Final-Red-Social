@@ -96,3 +96,8 @@ export const emitCommentCreated = (postId: string, comment: unknown, commentsCou
     commentsCount,
   });
 };
+
+export const emitDirectMessage = (receiverId: string, message: unknown) => {
+  if (!io) return;
+  io.to(`user_${receiverId}`).emit('chat:message_received', message);
+};

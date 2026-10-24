@@ -50,12 +50,12 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   return (
     <aside className="space-y-5">
       {/* 1. Widget A quién seguir (Estilo Facebook) */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/70 dark:border-slate-700 shadow-sm">
         <div className="flex items-center justify-between mb-3.5">
-          <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase tracking-wider">
             A quién seguir
           </h3>
-          <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded-full">
             Recomendados
           </span>
         </div>
@@ -79,10 +79,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     <img
                       src={u.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=U'}
                       alt={u.fullName}
-                      className="w-9 h-9 rounded-full object-cover border border-slate-200 flex-shrink-0 group-hover:ring-2 group-hover:ring-indigo-500/25 transition-all"
+                      className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0 group-hover:ring-2 group-hover:ring-indigo-500/25 transition-all"
                     />
                     <div className="truncate">
-                      <p className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 truncate transition-colors">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate transition-colors">
                         {u.fullName}
                       </p>
                       <p className="text-[10px] text-slate-400 truncate">@{u.username}</p>
@@ -95,7 +95,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className={`flex items-center space-x-1 px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex-shrink-0 ${
                       isFollowing
                         ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 hover:bg-indigo-700'
-                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700'
+                        : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
                     }`}
                   >
                     {isFollowing ? (

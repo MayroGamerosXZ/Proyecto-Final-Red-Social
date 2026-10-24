@@ -82,7 +82,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* ======================================================== */}
       {/* 1. Cabecera Principal con Banner de Portada (Estilo FB) */}
       {/* ======================================================== */}
-      <div className="bg-white rounded-3xl border border-slate-200/70 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/70 dark:border-slate-700 shadow-sm overflow-hidden">
         {/* Banner de Portada con Gradiente Vibrante y Patrón */}
         <div className="h-44 sm:h-60 w-full relative bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 overflow-hidden">
           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
@@ -100,35 +100,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <img
                 src={profile.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=U'}
                 alt={profile.fullName}
-                className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl object-cover border-4 border-white shadow-xl bg-white flex-shrink-0 ring-1 ring-slate-200/60"
+                className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl object-cover border-4 border-white dark:border-slate-800 shadow-xl bg-white dark:bg-slate-800 flex-shrink-0 ring-1 ring-slate-200/60 dark:ring-slate-700"
               />
 
               <div className="space-y-1">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100">
                   {profile.fullName}
                 </h1>
-                <p className="text-xs sm:text-sm font-bold text-indigo-600">
+                <p className="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">
                   @{profile.username}
                 </p>
 
                 {/* Métricas: Posts, Seguidores, Siguiendo */}
-                <div className="flex items-center justify-center sm:justify-start space-x-3 text-xs text-slate-500 pt-1">
+                <div className="flex items-center justify-center sm:justify-start space-x-3 text-xs text-slate-500 dark:text-slate-400 pt-1">
                   <span>
-                    <strong className="text-slate-800 font-bold">
+                    <strong className="text-slate-800 dark:text-slate-100 font-bold">
                       {profile._count?.posts ?? posts.length}
                     </strong>{' '}
                     Posts
                   </span>
                   <span>•</span>
                   <span>
-                    <strong className="text-slate-800 font-bold">
+                    <strong className="text-slate-800 dark:text-slate-100 font-bold">
                       {profile._count?.followers ?? 0}
                     </strong>{' '}
                     Seguidores
                   </span>
                   <span>•</span>
                   <span>
-                    <strong className="text-slate-800 font-bold">
+                    <strong className="text-slate-800 dark:text-slate-100 font-bold">
                       {profile._count?.following ?? 0}
                     </strong>{' '}
                     Siguiendo
@@ -137,7 +137,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
             </div>
 
-            {/* Botón de Acción en la Cabecera (Editar o Seguir) */}
+            {/* Botón de Acción en la Cabecera (Editar o Seguir o Mensaje) */}
             <div className="flex-shrink-0">
               <ProfileHeaderActions
                 profileUser={profile}
@@ -146,7 +146,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
 
-          <hr className="border-slate-100 my-2" />
+          <hr className="border-slate-100 dark:border-slate-700 my-2" />
 
           {/* Barra de Sub-Navegación de Pestañas */}
           <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-1">
@@ -154,8 +154,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               onClick={() => setActiveTab('posts')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'posts'
-                  ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -166,8 +166,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               onClick={() => setActiveTab('photos')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'photos'
-                  ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
               }`}
             >
               <ImageIcon className="w-3.5 h-3.5" />
@@ -178,8 +178,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               onClick={() => setActiveTab('about')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'about'
-                  ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
               }`}
             >
               <Info className="w-3.5 h-3.5" />
@@ -196,20 +196,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         {/* Columna Izquierda: Detalles / Intro + Fotos Recientes (4 cols) */}
         <aside className="col-span-1 lg:col-span-4 space-y-5">
           {/* Tarjeta 1: Detalles / Intro */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
-            <h3 className="font-bold text-slate-800 text-sm">Detalles</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Detalles</h3>
 
             {profile.bio ? (
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {profile.bio}
               </p>
             ) : (
               <p className="text-xs text-slate-400 italic">Sin biografía configurada.</p>
             )}
 
-            <hr className="border-slate-100" />
+            <hr className="border-slate-100 dark:border-slate-700" />
 
-            <div className="space-y-3 text-xs text-slate-600 font-medium">
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 font-medium">
               <div className="flex items-center space-x-2.5">
                 <Briefcase className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                 <span>Desarrollador Fullstack en SocialPulse</span>
@@ -221,7 +221,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   href="https://proyecto-final-red-social.vercel.app"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline truncate"
+                  className="text-indigo-600 dark:text-indigo-400 hover:underline truncate"
                 >
                   socialpulse.vercel.app
                 </a>
@@ -241,12 +241,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Tarjeta 2: Fotos Recientes */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-3">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-700 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 text-sm">Fotos Recientes</h3>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Fotos Recientes</h3>
               <button
                 onClick={() => setActiveTab('photos')}
-                className="text-xs font-bold text-indigo-600 hover:underline"
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
               >
                 Ver todas ({userPhotos.length})
               </button>
@@ -261,7 +261,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 {userPhotos.slice(0, 6).map((item) => (
                   <div
                     key={item.id}
-                    className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200/60 group relative cursor-pointer"
+                    className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200/60 dark:border-slate-600 group relative cursor-pointer"
                   >
                     <img
                       src={item.imageUrl || ''}
@@ -285,15 +285,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               {/* Muro de Posts */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                  <h3 className="font-bold text-slate-800 text-sm">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                     Publicaciones de {profile.fullName.split(' ')[0]} ({posts.length})
                   </h3>
                 </div>
 
                 {posts.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-10 text-center border border-slate-200/70 shadow-sm">
-                    <Sparkles className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <h4 className="text-sm font-bold text-slate-700">Sin publicaciones</h4>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 text-center border border-slate-200/70 dark:border-slate-700 shadow-sm">
+                    <Sparkles className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">Sin publicaciones</h4>
                     <p className="text-xs text-slate-400 mt-1">
                       Este usuario no ha publicado nada todavía.
                     </p>
@@ -313,8 +313,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           )}
 
           {activeTab === 'photos' && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
-              <h3 className="font-bold text-slate-800 text-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-700 shadow-sm space-y-4">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                 Todas las Fotos ({userPhotos.length})
               </h3>
               {userPhotos.length === 0 ? (
@@ -326,7 +326,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   {userPhotos.map((item) => (
                     <div
                       key={item.id}
-                      className="aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 group relative"
+                      className="aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 group relative"
                     >
                       <img
                         src={item.imageUrl || ''}
@@ -341,23 +341,23 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           )}
 
           {activeTab === 'about' && (
-            <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-sm space-y-5">
-              <h3 className="font-bold text-slate-800 text-sm">Información y Detalles</h3>
-              <div className="space-y-4 text-xs sm:text-sm text-slate-700">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-700 shadow-sm space-y-5">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Información y Detalles</h3>
+              <div className="space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 <div>
-                  <span className="block font-bold text-slate-400 uppercase text-[10px]">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[10px]">
                     Nombre Completo
                   </span>
-                  <p className="mt-1 font-semibold text-slate-800">{profile.fullName}</p>
+                  <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{profile.fullName}</p>
                 </div>
                 <div>
-                  <span className="block font-bold text-slate-400 uppercase text-[10px]">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[10px]">
                     Usuario
                   </span>
-                  <p className="mt-1 font-semibold text-indigo-600">@{profile.username}</p>
+                  <p className="mt-1 font-semibold text-indigo-600 dark:text-indigo-400">@{profile.username}</p>
                 </div>
                 <div>
-                  <span className="block font-bold text-slate-400 uppercase text-[10px]">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[10px]">
                     Biografía
                   </span>
                   <p className="mt-1 leading-relaxed">
@@ -365,7 +365,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </p>
                 </div>
                 <div>
-                  <span className="block font-bold text-slate-400 uppercase text-[10px]">
+                  <span className="block font-bold text-slate-400 dark:text-slate-500 uppercase text-[10px]">
                     Fecha de Registro
                   </span>
                   <p className="mt-1">

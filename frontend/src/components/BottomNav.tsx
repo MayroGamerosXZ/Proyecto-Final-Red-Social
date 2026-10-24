@@ -23,13 +23,13 @@ export const BottomNav: React.FC = () => {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-2 py-1.5 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {/* 1. Feed */}
         <Link
           href="/"
           className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-colors ${
-            pathname === '/' ? 'text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-900'
+            pathname === '/' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Home className="w-5 h-5" />
@@ -39,7 +39,7 @@ export const BottomNav: React.FC = () => {
         {/* 2. Explorar */}
         <Link
           href="/#tendencias"
-          className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 hover:text-indigo-600 transition-colors"
+          className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         >
           <Compass className="w-5 h-5" />
           <span className="text-[10px] mt-0.5">Explorar</span>

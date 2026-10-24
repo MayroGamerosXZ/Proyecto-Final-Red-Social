@@ -13,6 +13,8 @@ import userRoutes from './routes/user.routes';
 import postRoutes from './routes/post.routes';
 import notificationRoutes from './routes/notification.routes';
 import uploadRoutes from './routes/upload.routes';
+import messageRoutes from './routes/message.routes';
+import searchRoutes from './routes/search.routes';
 
 const app: Application = express();
 const server = http.createServer(app);
@@ -60,6 +62,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/search', searchRoutes);
 
 // Manejador global de errores
 app.use(errorHandler);
