@@ -6,7 +6,7 @@ import {
   unfollowUser,
   getSuggestedUsers,
 } from '../controllers/user.controller';
-import { authenticateJWT } from '../middlewares/authMiddleware';
+import { authenticateJWT, optionalAuth } from '../middlewares/authMiddleware';
 import { validateBody } from '../middlewares/validateRequest';
 import { updateProfileSchema } from '../schemas/auth.schema';
 
@@ -18,12 +18,14 @@ const router = Router();
  *   get:
  *     tags:
  *       - Usuarios
- *     summary: Obtener sugerencias de usuarios para seguir
+ *     summary: Obtener sugerencias de usuarios para seguir (excluye usuarios ya seguidos)
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de usuarios sugeridos
  */
-router.get('/suggestions', getSuggestedUsers);
+router.get('/suggestions', optionalAuth, getSuggestedUsers);
 
 /**
  * @openapi
@@ -60,7 +62,9 @@ router.put('/profile', authenticateJWT, validateBody(updateProfileSchema), updat
  *   get:
  *     tags:
  *       - Usuarios
- *     summary: Obtener perfil público por nombre de usuario
+ *     summary: Obtener perfil público por nombre de usuario (con estado isFollowing si está autenticado)
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: username
@@ -73,7 +77,7 @@ router.put('/profile', authenticateJWT, validateBody(updateProfileSchema), updat
  *       404:
  *         description: Usuario no encontrado
  */
-router.get('/:username', getProfileByUsername);
+router.get('/:username', optionalAuth, getProfileByUsername);
 
 /**
  * @openapi

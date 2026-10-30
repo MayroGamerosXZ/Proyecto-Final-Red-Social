@@ -12,9 +12,9 @@ import {
   toggleBookmark,
   getSavedPosts,
 } from '../controllers/post.controller';
-import { authenticateJWT } from '../middlewares/authMiddleware';
+import { authenticateJWT, optionalAuth } from '../middlewares/authMiddleware';
 import { validateBody, validateParams } from '../middlewares/validateRequest';
-import { createPostSchema, postIdParamSchema } from '../schemas/post.schema';
+import { createPostSchema, updatePostSchema, postIdParamSchema } from '../schemas/post.schema';
 import { createCommentSchema } from '../schemas/comment.schema';
 
 const router = Router();
@@ -57,12 +57,27 @@ router.post('/', authenticateJWT, validateBody(createPostSchema), createPost);
  *   get:
  *     tags:
  *       - Publicaciones
- *     summary: Obtener el feed global de publicaciones
+ *     summary: Obtener el feed global de publicaciones (con estado personal si está autenticado)
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página (mínimo 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Cantidad de publicaciones por página (máximo 50)
  *     responses:
  *       200:
  *         description: Lista de publicaciones recientes
  */
-router.get('/feed', getGlobalFeed);
+router.get('/feed', optionalAuth, getGlobalFeed);
 
 /**
  * @openapi
@@ -105,6 +120,8 @@ router.get('/saved', authenticateJWT, getSavedPosts);
  *     tags:
  *       - Publicaciones
  *     summary: Obtener todas las publicaciones de un usuario específico
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: username
@@ -117,7 +134,7 @@ router.get('/saved', authenticateJWT, getSavedPosts);
  *       404:
  *         description: Usuario no encontrado
  */
-router.get('/user/:username', getUserPosts);
+router.get('/user/:username', optionalAuth, getUserPosts);
 
 /**
  * @openapi
@@ -125,7 +142,7 @@ router.get('/user/:username', getUserPosts);
  *   put:
  *     tags:
  *       - Publicaciones
- *     summary: Editar una publicación propia
+ *     summary: Editar una publicación propia (contenido o imagen)
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -135,6 +152,7 @@ router.get('/user/:username', getUserPosts);
  *         schema:
  *           type: string
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -142,11 +160,15 @@ router.get('/user/:username', getUserPosts);
  *             properties:
  *               content:
  *                 type: string
+ *                 example: Contenido editado de la publicación
  *               imageUrl:
  *                 type: string
+ *                 example: https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe
  *     responses:
  *       200:
  *         description: Publicación actualizada correctamente
+ *       400:
+ *         description: Datos de entrada inválidos
  *       403:
  *         description: No autorizado
  *   delete:
@@ -169,7 +191,7 @@ router.get('/user/:username', getUserPosts);
  *       404:
  *         description: Publicación no encontrada
  */
-router.put('/:id', authenticateJWT, validateParams(postIdParamSchema), validateBody(createPostSchema), updatePost);
+router.put('/:id', authenticateJWT, validateParams(postIdParamSchema), validateBody(updatePostSchema), updatePost);
 router.delete('/:id', authenticateJWT, validateParams(postIdParamSchema), deletePost);
 
 /**
@@ -203,7 +225,7 @@ router.post('/:id/bookmark', authenticateJWT, validateParams(postIdParamSchema),
  *   post:
  *     tags:
  *       - Interacciones (Likes)
- *     summary: Dar o quitar like a una publicación (Toggle en tiempo real)
+ *     summary: Dar, alternar o reaccionar con emoji a una publicación (Toggle en tiempo real)
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -212,9 +234,23 @@ router.post('/:id/bookmark', authenticateJWT, validateParams(postIdParamSchema),
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               emoji:
+ *                 type: string
+ *                 example: '🔥'
+ *                 description: Emoji de la reacción (máximo 16 caracteres). Por defecto ❤️.
  *     responses:
  *       200:
  *         description: Estado de like actualizado y emitido en vivo vía WebSocket
+ *       400:
+ *         description: Emoji inválido
+ *       401:
+ *         description: No autorizado
  */
 router.post('/:id/like', authenticateJWT, validateParams(postIdParamSchema), toggleLike);
 

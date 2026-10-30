@@ -194,7 +194,14 @@ export const getSuggestedUsers = async (req: AuthenticatedRequest, res: Response
 
     const users = await prisma.user.findMany({
       where: {
-        id: { not: currentUserId },
+        id: currentUserId ? { not: currentUserId } : undefined,
+        ...(currentUserId && {
+          followers: {
+            none: {
+              followerId: currentUserId,
+            },
+          },
+        }),
       },
       take: 5,
       select: {

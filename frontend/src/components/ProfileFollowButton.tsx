@@ -20,6 +20,10 @@ export const ProfileFollowButton: React.FC<ProfileFollowButtonProps> = ({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
+  React.useEffect(() => {
+    setIsFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
+
   if (!isAuthenticated || user?.id === userId) {
     return null;
   }
@@ -49,7 +53,7 @@ export const ProfileFollowButton: React.FC<ProfileFollowButtonProps> = ({
       disabled={loading}
       className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm ${
         isFollowing
-          ? 'bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 border border-slate-200'
+          ? 'bg-slate-100 hover:bg-red-50 hover:text-red-600 dark:bg-slate-700 dark:hover:bg-red-950/40 dark:hover:text-red-400 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600'
           : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'
       }`}
     >

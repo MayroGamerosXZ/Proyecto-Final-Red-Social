@@ -52,17 +52,17 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto my-8">
-      <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none">
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white mx-auto mb-3 shadow-md shadow-indigo-500/20">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Crea tu cuenta</h1>
-          <p className="text-xs text-slate-400 mt-1">Conéctate, comparte y recibe notificaciones en vivo</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Crea tu cuenta</h1>
+          <p className="text-xs text-slate-400 dark:text-slate-400 mt-1">Conéctate, comparte y recibe notificaciones en vivo</p>
         </div>
 
         {error && (
-          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-100 flex items-center space-x-2 text-xs text-red-600 font-medium">
+          <div className="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900/60 flex items-center space-x-2 text-xs text-red-600 dark:text-red-400 font-medium">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
@@ -70,43 +70,43 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo</label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Carlos Mendoza"
               required
-              className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre de Usuario (@)</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nombre de Usuario (@)</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="carlos_dev"
               required
-              className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="carlos@ejemplo.com"
               required
-              className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Contraseña (mínimo 6 caracteres)</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Contraseña (mínimo 6 caracteres)</label>
             <input
               type="password"
               value={password}
@@ -114,18 +114,18 @@ export default function RegisterPage() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Biografía (opcional)</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Biografía (opcional)</label>
             <textarea
               rows={2}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Cuéntanos un poco sobre ti..."
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+              className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
             />
           </div>
 
@@ -139,10 +139,10 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-500">
+        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             ¿Ya tienes cuenta?{' '}
-            <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 underline">
+            <Link href="/login" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 underline">
               Inicia sesión aquí
             </Link>
           </p>

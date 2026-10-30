@@ -1,7 +1,7 @@
 # 🌐 SocialPulse — Red Social Fullstack en Tiempo Real
 **Proyecto Final de Desarrollo Web — Calificación Máxima: 15 / 15 Puntos**
 
-SocialPulse es una plataforma de red social moderna de alto rendimiento construida con **Next.js 15 (SSR)**, **Node.js / Express**, **PostgreSQL con Prisma ORM**, **WebSockets (Socket.io)** y **Swagger / OpenAPI 3.0**.
+SocialPulse es una plataforma de red social moderna de alto rendimiento construida con **Next.js 14.2.18 (SSR)**, **Node.js / Express**, **PostgreSQL con Prisma ORM**, **WebSockets (Socket.io)** y **Swagger / OpenAPI 3.0**.
 
 ---
 
@@ -57,7 +57,7 @@ Todos los endpoints están desplegados en Render y responden públicamente en fo
 | `POST` | `/api/auth/register` | Body JSON: `{ username, email, password, fullName }` | Registra un usuario y retorna token JWT. |
 | `POST` | `/api/auth/login` | Body JSON: `{ email, password }` | Valida credenciales contra el hash Bcrypt. |
 | `GET` | `/api/auth/me` | `Authorization: Bearer <token>` | Obtiene los datos del usuario autenticado. |
-| `POST` | `/api/upload` | `multipart/form-data: image` + Bearer | Sube una imagen local desde el dispositivo (hasta 50MB). |
+| `POST` | `/api/upload` | `multipart/form-data: image` + Bearer | Sube una imagen local desde el dispositivo (hasta 15MB por archivo; payload JSON hasta 50MB). |
 | `POST` | `/api/posts` | Body JSON: `{ content, imageUrl? }` + Bearer | Crea una nueva publicación (texto y/o foto). |
 | `DELETE`| `/api/posts/:id` | `Authorization: Bearer <token>` | Elimina una publicación propia. |
 | `PUT`  | `/api/posts/:id` | Body JSON: `{ content?, imageUrl? }` + Bearer | Edita una publicación propia. |
@@ -95,7 +95,7 @@ flowchart TD
     end
 
     subgraph FrontendApp["Frontend (Vercel)"]
-        SSR["Next.js 15 Server (SSR / Server Components)"]
+        SSR["Next.js 14 Server (SSR / Server Components)"]
         ClientApp["React 18 + Tailwind CSS"]
     end
 
@@ -210,12 +210,12 @@ erDiagram
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Frontend:** Next.js 15 (App Router con Server-Side Rendering), TypeScript, Tailwind CSS, Lucide React, Socket.io-client.
+- **Frontend:** Next.js 14.2.18 (App Router con Server-Side Rendering), TypeScript, Tailwind CSS, Lucide React, Socket.io-client.
 - **Backend:** Node.js, Express, TypeScript, Zod (validación estricta), jsonwebtoken (JWT), bcryptjs (hashing).
 - **Base de Datos & ORM:** PostgreSQL 16, Prisma ORM con migraciones reproducibles y script de seed.
 - **Tiempo Real:** Socket.io para entrega instantánea de notificaciones y contadores en vivo.
 - **Documentación API:** Swagger UI y especificación OpenAPI 3.0 en `/api/docs`.
-- **Contenedores:** Docker y Docker Compose para desarrollo local consistente.
+- **Contenedores:** Docker y Docker Compose para desarrollo local consistente con auto-migración.
 
 ---
 
@@ -238,6 +238,7 @@ erDiagram
    ```bash
    docker compose up --build
    ```
+   *(El contenedor backend ejecuta automáticamente `npx prisma migrate deploy` antes de iniciar el servidor).*
    - **Frontend:** `http://localhost:3000`
    - **Backend:** `http://localhost:5000`
    - **Swagger UI:** `http://localhost:5000/api/docs`
@@ -252,7 +253,7 @@ cd backend
 cp .env.example .env
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npm run seed
 npm run dev
 ```

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import multer from 'multer';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -24,6 +25,25 @@ export const errorHandler = (
         field: e.path.join('.'),
         message: e.message,
       })),
+    });
+  }
+
+  // Error de Multer (subida de archivos)
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      message:
+        err.code === 'LIMIT_FILE_SIZE'
+          ? 'El archivo excede el tamaño máximo permitido (15 MB)'
+          : `Error en subida de archivo: ${err.message}`,
+    });
+  }
+
+  // Error de filtro de archivo no permitido
+  if (err.message && err.message.includes('Solo se permiten archivos de imagen')) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
     });
   }
 

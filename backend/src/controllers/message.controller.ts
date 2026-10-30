@@ -160,6 +160,13 @@ export const sendMessage = async (
       });
     }
 
+    if (content.trim().length > 2000) {
+      return res.status(400).json({
+        success: false,
+        message: 'El contenido del mensaje no puede exceder 2000 caracteres',
+      });
+    }
+
     if (senderId === receiverId) {
       return res.status(400).json({
         success: false,

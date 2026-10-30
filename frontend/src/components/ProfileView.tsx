@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Post } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import { ProfileHeaderActions } from './ProfileHeaderActions';
 import { PostCard } from './PostCard';
 import { CreatePostCard } from './CreatePostCard';
@@ -32,6 +33,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [activeTab, setActiveTab] = useState<'posts' | 'photos' | 'about'>('posts');
 
   const isOwnProfile = user?.id === profile.id || user?.username === profile.username;
+
+  // Re-validar estado de seguimiento en cliente si el usuario está autenticado
+  useEffect(() => {
+    if (!user || user.id === initialProfile.id) return;
+    api.getProfile(initialProfile.username)
+      .then((res) => {
+        if (res.data) {
+          setProfile((prev) => ({
+            ...prev,
+            isFollowing: res.data.isFollowing,
+            _count: res.data._count || prev._count,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [user, initialProfile.username, initialProfile.id]);
 
   // Extraer todas las imágenes que el usuario ha subido en sus publicaciones
   const userPhotos = posts.filter((p) => Boolean(p.imageUrl));

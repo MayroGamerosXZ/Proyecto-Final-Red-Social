@@ -96,7 +96,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition-colors shadow-sm"
+        className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200/80 dark:border-slate-600 transition-colors shadow-sm"
       >
         <Edit3 className="w-3.5 h-3.5" />
         <span>Editar Perfil</span>
@@ -104,30 +104,30 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-800">Editar mi Perfil</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-700">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Editar mi Perfil</h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {error && (
-              <p className="text-xs text-red-500 mb-3 bg-red-50 p-2.5 rounded-xl border border-red-100">
+              <p className="text-xs text-red-500 mb-3 bg-red-50 dark:bg-red-950/50 p-2.5 rounded-xl border border-red-100 dark:border-red-900/60">
                 {error}
               </p>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Sección de Selección de Foto */}
-              <div className="flex items-center space-x-4 p-3 bg-slate-50 rounded-2xl border border-slate-200/60">
+              <div className="flex items-center space-x-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-slate-700">
                 <img
                   src={previewUrl || avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=U'}
                   alt="Avatar preview"
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-200 shadow-sm flex-shrink-0"
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-200 dark:border-indigo-800 shadow-sm flex-shrink-0"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
                       'https://api.dicebear.com/7.x/initials/svg?seed=U';
@@ -135,7 +135,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 />
 
                 <div className="flex-1 min-w-0">
-                  <span className="block text-xs font-bold text-slate-800 mb-1">
+                  <span className="block text-xs font-bold text-slate-800 dark:text-white mb-1">
                     Foto de Perfil
                   </span>
 
@@ -160,7 +160,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowUrlInput(!showUrlInput)}
-                      className="flex items-center space-x-1 px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 transition-colors"
+                      className="flex items-center space-x-1 px-2.5 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
                       title="Ingresar URL de imagen"
                     >
                       <LinkIcon className="w-3 h-3" />
@@ -169,7 +169,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </div>
 
                   {avatarFile && (
-                    <span className="block text-[10px] text-indigo-600 font-medium mt-1 truncate">
+                    <span className="block text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1 truncate">
                       Archivo: {avatarFile.name}
                     </span>
                   )}
@@ -179,7 +179,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {/* Opción alternativa de URL si el usuario prefiere pegar enlace */}
               {showUrlInput && (
                 <div className="animate-in fade-in duration-100">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     O pega la URL directa de la imagen
                   </label>
                   <input
@@ -191,13 +191,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                       setAvatarFile(null);
                     }}
                     placeholder="https://..."
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Nombre Completo
                 </label>
                 <input
@@ -205,12 +205,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Biografía
                 </label>
                 <textarea
@@ -218,15 +218,15 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Cuéntanos un poco sobre ti..."
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                  className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>

@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/db';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 export const globalSearch = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const currentUserId = (req as AuthenticatedRequest).user?.userId;
     const q = ((req.query.q as string) || '').trim();
 
     if (!q) {
@@ -67,16 +69,27 @@ export const globalSearch = async (req: Request, res: Response, next: NextFuncti
             userId: true,
           },
         },
+        bookmarks: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { id: true },
+            }
+          : false,
       },
     });
 
     const formattedPosts = posts.map((post) => {
+      const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
       const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const isBookmarked = Boolean(currentUserId && (post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { likes, ...rest } = post;
+      const { likes, bookmarks, ...rest } = post as any;
       return {
         ...rest,
+        isLiked: !!userLike,
+        userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        isBookmarked,
       };
     });
 

@@ -19,6 +19,17 @@ import searchRoutes from './routes/search.routes';
 const app: Application = express();
 const server = http.createServer(app);
 
+// Deshabilitar cabecera publicitaria de Express (M4)
+app.disable('x-powered-by');
+
+// Cabeceras de seguridad HTTP fundamentales
+app.use((_req: Request, res: Response, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 // Inicializar WebSockets con Socket.io
 initSocketServer(server);
 
@@ -46,7 +57,17 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Documentación pública OpenAPI / Swagger en /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Health Check
+/**
+ * @openapi
+ * /api/health:
+ *   get:
+ *     tags:
+ *       - Sistema y Monitoreo
+ *     summary: Estado de salud y disponibilidad del servicio backend
+ *     responses:
+ *       200:
+ *         description: Servicio en línea con métricas de tiempo de actividad
+ */
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',

@@ -29,6 +29,28 @@ const upload = multer({
   },
 });
 
+// Middleware seguro para capturar errores de multer y responder con 400
+const handleMulterUpload = (req: any, res: Response, next: NextFunction) => {
+  upload.single('image')(req, res, (err: any) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+          success: false,
+          message:
+            err.code === 'LIMIT_FILE_SIZE'
+              ? 'El archivo excede el tamaño máximo permitido de 15 MB'
+              : `Error al procesar archivo: ${err.message}`,
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'Formato de imagen inválido',
+      });
+    }
+    next();
+  });
+};
+
 /**
  * @openapi
  * /api/upload:
@@ -62,7 +84,7 @@ const upload = multer({
 router.post(
   '/',
   authenticateJWT,
-  upload.single('image'),
+  handleMulterUpload,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.file) {

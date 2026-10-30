@@ -128,8 +128,8 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response, next:
 export const getGlobalFeed = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const currentUserId = (req as AuthenticatedRequest).user?.userId;
-    const page = parseInt(req.query.page as string, 10) || 1;
-    const limit = parseInt(req.query.limit as string, 10) || 20;
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
     const skip = (page - 1) * limit;
 
     const posts = await prisma.post.findMany({
@@ -157,6 +157,12 @@ export const getGlobalFeed = async (req: Request, res: Response, next: NextFunct
             userId: true,
           },
         },
+        bookmarks: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { id: true },
+            }
+          : false,
       },
     });
 
@@ -187,8 +193,8 @@ export const getGlobalFeed = async (req: Request, res: Response, next: NextFunct
 export const getFollowingFeed = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
-    const page = parseInt(req.query.page as string, 10) || 1;
-    const limit = parseInt(req.query.limit as string, 10) || 20;
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
     const skip = (page - 1) * limit;
 
     const following = await prisma.follow.findMany({
@@ -227,19 +233,25 @@ export const getFollowingFeed = async (req: AuthenticatedRequest, res: Response,
             userId: true,
           },
         },
+        bookmarks: {
+          where: { userId },
+          select: { id: true },
+        },
       },
     });
 
     const formattedPosts = posts.map((post) => {
       const userLike = post.likes.find((l) => l.userId === userId);
       const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const isBookmarked = Boolean((post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { likes, ...rest } = post;
+      const { likes, bookmarks, ...rest } = post as any;
       return {
         ...rest,
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        isBookmarked,
       };
     });
 
@@ -292,6 +304,12 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
             userId: true,
           },
         },
+        bookmarks: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { id: true },
+            }
+          : false,
       },
     });
 
@@ -359,7 +377,17 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
   try {
     const userId = req.user!.userId;
     const { id: postId } = req.params;
-    const chosenEmoji = req.body?.emoji || '❤️';
+
+    let chosenEmoji = '❤️';
+    if (req.body?.emoji !== undefined && req.body?.emoji !== null) {
+      if (typeof req.body.emoji !== 'string' || req.body.emoji.trim().length === 0 || req.body.emoji.length > 16) {
+        return res.status(400).json({
+          success: false,
+          message: 'El emoji debe ser una cadena de texto no vacía de máximo 16 caracteres',
+        });
+      }
+      chosenEmoji = req.body.emoji.trim();
+    }
 
     const post = await prisma.post.findUnique({
       where: { id: postId },

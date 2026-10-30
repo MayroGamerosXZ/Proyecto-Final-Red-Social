@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { globalSearch } from '../controllers/search.controller';
+import { optionalAuth } from '../middlewares/authMiddleware';
 
 const router = Router();
 
@@ -10,6 +11,8 @@ const router = Router();
  *     tags:
  *       - Búsqueda Avanzada
  *     summary: Buscar usuarios y publicaciones en tiempo real (Autocompletado)
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: q
@@ -21,6 +24,6 @@ const router = Router();
  *       200:
  *         description: Resultados coincidentes de usuarios y publicaciones
  */
-router.get('/', globalSearch);
+router.get('/', optionalAuth, globalSearch);
 
 export default router;

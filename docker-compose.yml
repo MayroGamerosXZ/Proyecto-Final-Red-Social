@@ -41,6 +41,7 @@ services:
     depends_on:
       postgres_db:
         condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npm run dev"
 
   frontend_web:
     build:

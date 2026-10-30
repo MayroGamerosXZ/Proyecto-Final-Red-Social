@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject } from 'zod';
+import { ZodSchema } from 'zod';
 
-export const validateBody = (schema: AnyZodObject) => {
+export const validateBody = (schema: ZodSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = await schema.parseAsync(req.body);
@@ -12,7 +12,7 @@ export const validateBody = (schema: AnyZodObject) => {
   };
 };
 
-export const validateParams = (schema: AnyZodObject) => {
+export const validateParams = (schema: ZodSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       req.params = await schema.parseAsync(req.params);
@@ -23,7 +23,7 @@ export const validateParams = (schema: AnyZodObject) => {
   };
 };
 
-export const validateQuery = (schema: AnyZodObject) => {
+export const validateQuery = (schema: ZodSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       req.query = await schema.parseAsync(req.query);
