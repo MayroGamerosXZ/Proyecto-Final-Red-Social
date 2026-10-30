@@ -11,11 +11,27 @@ export interface AuthenticatedSocket extends Socket {
 }
 
 export const initSocketServer = (httpServer: HttpServer): SocketIOServer => {
-  const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+  const configuredOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+  const defaultAllowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:10000',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:10000',
+    'https://proyecto-final-red-social.onrender.com',
+  ];
+  const allAllowedOrigins = Array.from(new Set([...configuredOrigins, ...defaultAllowedOrigins]));
 
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin || allAllowedOrigins.includes('*') || allAllowedOrigins.includes(requestOrigin)) {
+          return callback(null, true);
+        }
+        if (/^https:\/\/.*\.vercel\.app$/.test(requestOrigin) || /^https:\/\/.*\.onrender\.com$/.test(requestOrigin)) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -100,4 +116,9 @@ export const emitCommentCreated = (postId: string, comment: unknown, commentsCou
 export const emitDirectMessage = (receiverId: string, message: unknown) => {
   if (!io) return;
   io.to(`user_${receiverId}`).emit('chat:message_received', message);
+};
+
+export const emitMessagesRead = (senderId: string, readerId: string) => {
+  if (!io) return;
+  io.to(`user_${senderId}`).emit('chat:messages_read', { readerId });
 };

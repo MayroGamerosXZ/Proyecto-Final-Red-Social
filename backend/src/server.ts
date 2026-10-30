@@ -33,20 +33,33 @@ app.use((_req: Request, res: Response, next) => {
 // Inicializar WebSockets con Socket.io
 initSocketServer(server);
 
-// Configuración de CORS estricto
-const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+// Configuración de CORS estricto y flexible para Swagger, Vercel y Localhost
+const configuredOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+const defaultAllowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:10000',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:10000',
+  'https://proyecto-final-red-social.onrender.com',
+];
+const allAllowedOrigins = Array.from(new Set([...configuredOrigins, ...defaultAllowedOrigins]));
+
 app.use(
   cors({
     origin: (origin, callback) => {
       // Permitir peticiones sin origen (ej. curl, Postman, SSR server-to-server)
-      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      if (!origin || allAllowedOrigins.includes('*') || allAllowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Permitir vistas previas y despliegues de Vercel y Render
+      if (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.onrender\.com$/.test(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`Origen CORS no permitido por políticas de seguridad: ${origin}`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 

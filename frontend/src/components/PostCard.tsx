@@ -94,6 +94,17 @@ export const PostCard: React.FC<PostCardProps> = ({
   // Estado Toast de Enlace Copiado (Compartir)
   const [showCopiedToast, setShowCopiedToast] = useState(false);
 
+  // Sincronizar estado local cuando cambien las propiedades del post
+  useEffect(() => {
+    setContent(post.content);
+    setImageUrl(post.imageUrl || '');
+    setLikesCount(post._count?.likes ?? 0);
+    setUserReaction(post.userReaction || null);
+    setTopReactions(post.topReactions || (post.isLiked ? ['❤️'] : []));
+    setCommentsCount(post._count?.comments ?? 0);
+    setIsBookmarked(post.isBookmarked || false);
+  }, [post]);
+
   // Escuchar eventos en vivo de Socket.io
   useEffect(() => {
     if (!socket) return;
@@ -531,39 +542,44 @@ export const PostCard: React.FC<PostCardProps> = ({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              if (!userReaction) {
-                handleSelectReaction('❤️');
-              } else {
-                handleSelectReaction(userReaction);
-              }
-            }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setShowEmojiPicker(true);
-            }}
-            className={`w-full flex items-center justify-center space-x-2 py-2 rounded-xl text-xs font-bold transition-all ${
+          <div
+            className={`w-full flex items-center justify-between rounded-xl transition-all ${
               userReaction
                 ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/40'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <span className="text-sm">{userReaction || '🤍'}</span>
-            <span>{userReaction ? 'Reaccionado' : 'Me gusta'}</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (!userReaction) {
+                  handleSelectReaction('❤️');
+                } else {
+                  handleSelectReaction(userReaction);
+                }
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setShowEmojiPicker(true);
+              }}
+              className="flex-1 flex items-center justify-center space-x-1.5 py-2 pl-2 text-xs font-bold"
+              title="Reaccionar a esta publicación"
+            >
+              <span className="text-sm">{userReaction || '🤍'}</span>
+              <span>{userReaction ? 'Reaccionado' : 'Me gusta'}</span>
+            </button>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowEmojiPicker(!showEmojiPicker);
               }}
-              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-0.5"
-              title="Más reacciones"
+              className="p-1.5 mr-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              title="Elegir reacción (❤️, 🔥, 😂, 👏, 🚀, 😍)"
             >
               <Smile className="w-3.5 h-3.5" />
             </button>
-          </button>
+          </div>
         </div>
 
         {/* Botón 2: Comentar */}

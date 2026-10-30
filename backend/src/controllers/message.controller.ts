@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../config/db';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
-import { emitDirectMessage } from '../sockets/socket.server';
+import { emitDirectMessage, emitMessagesRead } from '../sockets/socket.server';
 
 /**
  * Obtener lista de conversaciones recientes del usuario autenticado
@@ -106,7 +106,7 @@ export const getMessagesWithUser = async (
     }
 
     // Marcar como leídos los mensajes recibidos de este usuario
-    await prisma.message.updateMany({
+    const updateResult = await prisma.message.updateMany({
       where: {
         senderId: otherUserId,
         receiverId: currentUserId,
@@ -116,6 +116,10 @@ export const getMessagesWithUser = async (
         isRead: true,
       },
     });
+
+    if (updateResult.count > 0) {
+      emitMessagesRead(otherUserId, currentUserId);
+    }
 
     // Obtener historial ordenado cronológicamente
     const messages = await prisma.message.findMany({

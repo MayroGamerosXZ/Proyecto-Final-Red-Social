@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import {
   Home,
@@ -34,6 +35,24 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   activeTab = 'global',
 }) => {
   const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleTabClick = (targetTab: 'global' | 'following') => {
+    if (pathname === '/') {
+      if (onSelectTab) onSelectTab(targetTab);
+    } else {
+      router.push(targetTab === 'following' ? '/?tab=following' : '/');
+    }
+  };
+
+  const handleTagClick = (tag: string) => {
+    if (pathname === '/' && onSelectTag) {
+      onSelectTag(tag);
+    } else {
+      router.push(`/?q=${encodeURIComponent(tag)}`);
+    }
+  };
 
   return (
     <aside className="space-y-4">
@@ -67,9 +86,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         {/* Lista de navegación vertical estilo Facebook */}
         <nav className="space-y-1">
           <button
-            onClick={() => onSelectTab && onSelectTab('global')}
+            onClick={() => handleTabClick('global')}
             className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors text-left ${
-              activeTab === 'global'
+              activeTab === 'global' && pathname === '/'
                 ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -89,9 +108,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           )}
 
           <button
-            onClick={() => onSelectTab && onSelectTab('following')}
+            onClick={() => handleTabClick('following')}
             className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors text-left ${
-              activeTab === 'following'
+              activeTab === 'following' && pathname === '/'
                 ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -144,7 +163,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           {TRENDING_TAGS.map((item) => (
             <button
               key={item.tag}
-              onClick={() => onSelectTag && onSelectTag(item.tag)}
+              onClick={() => handleTagClick(item.tag)}
               className="w-full flex items-center justify-between p-2 rounded-xl text-left hover:bg-indigo-50/70 dark:hover:bg-slate-700/50 transition-colors group"
             >
               <div>

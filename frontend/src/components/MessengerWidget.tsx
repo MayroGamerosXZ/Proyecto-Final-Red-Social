@@ -12,6 +12,7 @@ import {
   MessageCircle,
   ArrowLeft,
   Sparkles,
+  Check,
   CheckCheck,
 } from 'lucide-react';
 
@@ -68,12 +69,22 @@ export const MessengerWidget: React.FC = () => {
       }
     };
 
+    const handleMessagesRead = (data: { readerId: string }) => {
+      if (data.readerId === activeTarget.id) {
+        setMessages((prev) =>
+          prev.map((msg) => (msg.senderId === user?.id ? { ...msg, isRead: true } : msg))
+        );
+      }
+    };
+
     socket.on('chat:message_received', handleIncoming);
+    socket.on('chat:messages_read', handleMessagesRead);
 
     return () => {
       socket.off('chat:message_received', handleIncoming);
+      socket.off('chat:messages_read', handleMessagesRead);
     };
-  }, [socket, activeTarget]);
+  }, [socket, activeTarget, user?.id]);
 
   if (!isAuthenticated || !isOpen) {
     return null;
@@ -192,7 +203,17 @@ export const MessengerWidget: React.FC = () => {
                           minute: '2-digit',
                         })}
                       </span>
-                      {isMine && <CheckCheck className="w-2.5 h-2.5 text-indigo-400" />}
+                      {isMine && (
+                        m.isRead ? (
+                          <span title="Visto / Leído por el destinatario" className="inline-flex items-center">
+                            <CheckCheck className="w-3 h-3 text-indigo-500 dark:text-indigo-400 stroke-[2.5]" />
+                          </span>
+                        ) : (
+                          <span title="Enviado (Aún no leído)" className="inline-flex items-center">
+                            <Check className="w-3 h-3 text-slate-400 stroke-[2]" />
+                          </span>
+                        )
+                      )}
                     </span>
                   </div>
                 );

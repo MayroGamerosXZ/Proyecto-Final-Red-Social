@@ -16,8 +16,9 @@ function FeedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
+  const tabParam = searchParams.get('tab') || '';
 
-  const [tab, setTab] = useState<'global' | 'following'>('global');
+  const [tab, setTab] = useState<'global' | 'following'>(tabParam === 'following' ? 'following' : 'global');
   const [posts, setPosts] = useState<Post[]>([]);
   const [suggestions, setSuggestions] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,13 @@ function FeedContent() {
       router.replace('/login');
     }
   }, [isLoading, isAuthenticated, router]);
+
+  // Si cambia la pestaña por parámetro de URL, sincronizar el feed
+  useEffect(() => {
+    if (tabParam === 'following' || tabParam === 'global') {
+      setTab(tabParam as 'global' | 'following');
+    }
+  }, [tabParam]);
 
   // Si cambia el parámetro de búsqueda en la URL, actualizar el filtro
   useEffect(() => {
@@ -132,7 +140,15 @@ function FeedContent() {
         <div className="sticky top-20 space-y-4">
           <LeftSidebar
             onSelectTag={handleTagClick}
-            onSelectTab={setTab}
+            onSelectTab={(selected) => {
+              setTab(selected);
+              clearFilter();
+              if (selected === 'following') {
+                router.push('/?tab=following');
+              } else {
+                router.push('/');
+              }
+            }}
             activeTab={tab}
           />
         </div>

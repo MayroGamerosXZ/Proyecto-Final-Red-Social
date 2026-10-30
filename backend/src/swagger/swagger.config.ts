@@ -14,16 +14,16 @@ const swaggerDefinition = {
   },
   servers: [
     {
+      url: '/',
+      description: 'Servidor Actual / Relativo (Recomendado - Automático sin CORS)',
+    },
+    {
       url: 'https://proyecto-final-red-social.onrender.com',
       description: 'Servidor de Producción (Render Cloud)',
     },
     {
       url: `http://localhost:${env.PORT}`,
-      description: 'Servidor Local de Desarrollo',
-    },
-    {
-      url: '/',
-      description: 'Servidor Actual (Relativo)',
+      description: 'Servidor Local de Desarrollo (Solo si ejecutas el backend en tu PC)',
     },
   ],
   components: {
