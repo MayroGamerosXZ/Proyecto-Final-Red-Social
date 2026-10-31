@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Post } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { api } from '../lib/api';
 import { ProfileHeaderActions } from './ProfileHeaderActions';
 import { PostCard } from './PostCard';
@@ -28,11 +29,73 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   initialPosts,
 }) => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [profile, setProfile] = useState<User>(initialProfile);
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [activeTab, setActiveTab] = useState<'posts' | 'photos' | 'about'>('posts');
 
   const isOwnProfile = user?.id === profile.id || user?.username === profile.username;
+
+  // Sincronización en tiempo real de publicaciones en el perfil vía WebSocket
+  useEffect(() => {
+    if (!socket) return;
+
+    const onSocketPostCreated = (newPost: Post) => {
+      if (newPost.userId !== profile.id) return;
+      setPosts((prev) => {
+        if (prev.some((p) => p.id === newPost.id)) return prev;
+        setProfile((p) => ({
+          ...p,
+          _count: {
+            posts: (p._count?.posts ?? prev.length) + 1,
+            followers: p._count?.followers ?? 0,
+            following: p._count?.following ?? 0,
+          },
+        }));
+        return [newPost, ...prev];
+      });
+    };
+
+    const onSocketPostUpdated = (updatedPost: Post) => {
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === updatedPost.id
+            ? {
+                ...p,
+                content: updatedPost.content,
+                imageUrl: updatedPost.imageUrl,
+                updatedAt: updatedPost.updatedAt,
+              }
+            : p
+        )
+      );
+    };
+
+    const onSocketPostDeleted = (data: { postId: string }) => {
+      setPosts((prev) => {
+        if (!prev.some((p) => p.id === data.postId)) return prev;
+        setProfile((p) => ({
+          ...p,
+          _count: {
+            posts: Math.max(0, (p._count?.posts ?? prev.length) - 1),
+            followers: p._count?.followers ?? 0,
+            following: p._count?.following ?? 0,
+          },
+        }));
+        return prev.filter((p) => p.id !== data.postId);
+      });
+    };
+
+    socket.on('post:created', onSocketPostCreated);
+    socket.on('post:updated', onSocketPostUpdated);
+    socket.on('post:deleted', onSocketPostDeleted);
+
+    return () => {
+      socket.off('post:created', onSocketPostCreated);
+      socket.off('post:updated', onSocketPostUpdated);
+      socket.off('post:deleted', onSocketPostDeleted);
+    };
+  }, [socket, profile.id]);
 
   // Re-validar estado de seguimiento en cliente si el usuario está autenticado
   useEffect(() => {
@@ -54,15 +117,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const userPhotos = posts.filter((p) => Boolean(p.imageUrl));
 
   const handlePostCreated = (newPost: Post) => {
-    setPosts((prev) => [newPost, ...prev]);
-    setProfile((prev) => ({
-      ...prev,
-      _count: {
-        posts: (prev._count?.posts ?? prev._count?.posts ?? 0) + 1,
-        followers: prev._count?.followers ?? 0,
-        following: prev._count?.following ?? 0,
-      },
-    }));
+    setPosts((prev) => {
+      if (prev.some((p) => p.id === newPost.id)) return prev;
+      setProfile((p) => ({
+        ...p,
+        _count: {
+          posts: (p._count?.posts ?? prev.length) + 1,
+          followers: p._count?.followers ?? 0,
+          following: p._count?.following ?? 0,
+        },
+      }));
+      return [newPost, ...prev];
+    });
   };
 
   const handlePostDeleted = (postId: string) => {

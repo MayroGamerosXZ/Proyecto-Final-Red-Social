@@ -9,11 +9,13 @@ import { RightSidebar } from '../components/RightSidebar';
 import { Post, User } from '../types';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Users, X, Search, Eye, LogIn } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import { Sparkles, Users, X, Search, Eye, LogIn, Radio } from 'lucide-react';
 import Link from 'next/link';
 
 function FeedContent() {
   const { user, isAuthenticated, isGuest, isLoading } = useAuth();
+  const { socket } = useSocket();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
@@ -26,6 +28,11 @@ function FeedContent() {
   const [suggestions, setSuggestions] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string>(queryParam);
+  const [livePostNotice, setLivePostNotice] = useState<{
+    authorName: string;
+    authorUsername: string;
+    avatarUrl?: string | null;
+  } | null>(null);
 
   // Requerimiento primario: Si no está autenticado ni en modo invitado, redirigir a /login
   useEffect(() => {
@@ -81,7 +88,7 @@ function FeedContent() {
   }, [isAuthenticated, isGuest]);
 
   const handlePostCreated = (newPost: Post) => {
-    setPosts((prev) => [newPost, ...prev]);
+    setPosts((prev) => (prev.some((p) => p.id === newPost.id) ? prev : [newPost, ...prev]));
   };
 
   const handlePostDeleted = (postId: string) => {
@@ -89,8 +96,78 @@ function FeedContent() {
   };
 
   const handlePostUpdated = (updatedPost: Post) => {
-    setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === updatedPost.id
+          ? {
+              ...p,
+              ...updatedPost,
+              isLiked: updatedPost.isLiked !== undefined ? updatedPost.isLiked : p.isLiked,
+              userReaction:
+                updatedPost.userReaction !== undefined ? updatedPost.userReaction : p.userReaction,
+              isBookmarked:
+                updatedPost.isBookmarked !== undefined ? updatedPost.isBookmarked : p.isBookmarked,
+            }
+          : p
+      )
+    );
   };
+
+  // Escuchar creación, edición y eliminación de publicaciones en tiempo real vía WebSocket
+  useEffect(() => {
+    if (!socket) return;
+
+    const onSocketPostCreated = (newPost: Post) => {
+      setPosts((prev) => {
+        if (prev.some((p) => p.id === newPost.id)) return prev;
+        return [newPost, ...prev];
+      });
+
+      if (newPost.userId !== user?.id) {
+        setLivePostNotice({
+          authorName: newPost.user.fullName,
+          authorUsername: newPost.user.username,
+          avatarUrl: newPost.user.avatarUrl,
+        });
+      }
+    };
+
+    const onSocketPostUpdated = (updatedPost: Post) => {
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === updatedPost.id
+            ? {
+                ...p,
+                content: updatedPost.content,
+                imageUrl: updatedPost.imageUrl,
+                updatedAt: updatedPost.updatedAt,
+              }
+            : p
+        )
+      );
+    };
+
+    const onSocketPostDeleted = (data: { postId: string }) => {
+      setPosts((prev) => prev.filter((p) => p.id !== data.postId));
+    };
+
+    socket.on('post:created', onSocketPostCreated);
+    socket.on('post:updated', onSocketPostUpdated);
+    socket.on('post:deleted', onSocketPostDeleted);
+
+    return () => {
+      socket.off('post:created', onSocketPostCreated);
+      socket.off('post:updated', onSocketPostUpdated);
+      socket.off('post:deleted', onSocketPostDeleted);
+    };
+  }, [socket, user?.id]);
+
+  // Ocultar automáticamente el aviso de nueva publicación tras 5 segundos
+  useEffect(() => {
+    if (!livePostNotice) return;
+    const timer = setTimeout(() => setLivePostNotice(null), 5000);
+    return () => clearTimeout(timer);
+  }, [livePostNotice]);
 
   const handleFollowSuggestion = async (userId: string) => {
     try {
@@ -252,6 +329,49 @@ function FeedContent() {
               <LogIn className="w-3.5 h-3.5" />
               <span>Iniciar Sesión</span>
             </Link>
+          </div>
+        )}
+
+        {/* Aviso flotante de nueva publicación recibida en tiempo real */}
+        {livePostNotice && (
+          <div
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setLivePostNotice(null);
+            }}
+            className="cursor-pointer flex items-center justify-between bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white rounded-2xl px-4 py-2.5 shadow-lg shadow-indigo-500/25 border border-indigo-400/30 animate-in fade-in slide-in-from-top-2 duration-300"
+          >
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <img
+                src={
+                  livePostNotice.avatarUrl ||
+                  'https://api.dicebear.com/7.x/initials/svg?seed=U'
+                }
+                alt={livePostNotice.authorName}
+                className="w-7 h-7 rounded-full object-cover border border-white/50 flex-shrink-0"
+              />
+              <div className="text-xs truncate">
+                <span className="font-extrabold">{livePostNotice.authorName}</span>{' '}
+                <span className="text-indigo-200">(@{livePostNotice.authorUsername})</span>{' '}
+                acaba de publicar algo nuevo en vivo
+              </div>
+            </div>
+            <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+              <span className="inline-flex items-center space-x-1 bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                <Radio className="w-3 h-3 animate-pulse" />
+                <span>En vivo</span>
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLivePostNotice(null);
+                }}
+                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                title="Cerrar aviso"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
 

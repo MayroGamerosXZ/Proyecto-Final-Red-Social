@@ -3,6 +3,9 @@ import { prisma } from '../config/db';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import {
   emitNotificationToUser,
+  emitPostCreated,
+  emitPostUpdated,
+  emitPostDeleted,
   emitPostLikeUpdated,
   emitCommentCreated,
 } from '../sockets/socket.server';
@@ -51,16 +54,21 @@ export const createPost = async (req: AuthenticatedRequest, res: Response, next:
       },
     });
 
+    const formattedPost = {
+      ...post,
+      isLiked: false,
+      userReaction: null,
+      topReactions: [],
+      reactionCounts: {},
+    };
+
+    // Emitir nueva publicación en tiempo real a todos los usuarios conectados
+    emitPostCreated(formattedPost);
+
     return res.status(201).json({
       success: true,
       message: 'Publicación creada exitosamente',
-      data: {
-        ...post,
-        isLiked: false,
-        userReaction: null,
-        topReactions: [],
-        reactionCounts: {},
-      },
+      data: formattedPost,
     });
   } catch (error) {
     next(error);
@@ -125,6 +133,12 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response, next:
     const { topReactions, reactionCounts } = computeReactionStats(updatedPost.likes);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { likes, ...rest } = updatedPost;
+
+    emitPostUpdated({
+      ...rest,
+      topReactions,
+      reactionCounts,
+    });
 
     return res.status(200).json({
       success: true,
@@ -383,6 +397,8 @@ export const deletePost = async (req: AuthenticatedRequest, res: Response, next:
     await prisma.post.delete({
       where: { id },
     });
+
+    emitPostDeleted(id);
 
     return res.status(200).json({
       success: true,

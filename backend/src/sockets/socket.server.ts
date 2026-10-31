@@ -146,6 +146,21 @@ export const emitNotificationToUser = (recipientId: string, notification: unknow
   io.to(`user_${recipientId}`).emit('notification:new', notification);
 };
 
+export const emitPostCreated = (post: unknown) => {
+  if (!io) return;
+  io.to('feed_global').emit('post:created', post);
+};
+
+export const emitPostUpdated = (post: unknown) => {
+  if (!io) return;
+  io.to('feed_global').emit('post:updated', post);
+};
+
+export const emitPostDeleted = (postId: string) => {
+  if (!io) return;
+  io.to('feed_global').emit('post:deleted', { postId });
+};
+
 export const emitPostLikeUpdated = (
   postId: string,
   likesCount: number,
