@@ -113,11 +113,30 @@ class ApiClient {
   async toggleLike(postId: string, emoji = '❤️') {
     return this.request<{
       success: boolean;
-      data: { postId: string; likesCount: number; isLiked: boolean; userReaction: string | null; topReactions: string[] };
+      data: {
+        postId: string;
+        likesCount: number;
+        isLiked: boolean;
+        userReaction: string | null;
+        topReactions: string[];
+        reactionCounts?: Record<string, number>;
+      };
     }>(`/api/posts/${postId}/like`, {
       method: 'POST',
       body: JSON.stringify({ emoji }),
     });
+  }
+
+  async getPostReactions(postId: string) {
+    return this.request<{
+      success: boolean;
+      data: {
+        totalCount: number;
+        topReactions: string[];
+        reactionCounts: Record<string, number>;
+        reactions: any[];
+      };
+    }>(`/api/posts/${postId}/likes`);
   }
 
   async getComments(postId: string) {

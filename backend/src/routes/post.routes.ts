@@ -7,6 +7,7 @@ import {
   getUserPosts,
   deletePost,
   toggleLike,
+  getPostReactions,
   createComment,
   getComments,
   toggleBookmark,
@@ -252,6 +253,24 @@ router.post('/:id/bookmark', authenticateJWT, validateParams(postIdParamSchema),
  *       401:
  *         description: No autorizado
  */
+/**
+ * @openapi
+ * /api/posts/{id}/likes:
+ *   get:
+ *     tags:
+ *       - Interacciones (Likes)
+ *     summary: Obtener el listado detallado de usuarios y desglose por emoji que reaccionaron a una publicación
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista detallada de reacciones y contadores por emoji
+ */
+router.get('/:id/likes', validateParams(postIdParamSchema), getPostReactions);
 router.post('/:id/like', authenticateJWT, validateParams(postIdParamSchema), toggleLike);
 
 /**

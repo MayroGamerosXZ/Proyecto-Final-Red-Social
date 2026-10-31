@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Post, Comment } from '../types';
+import { Post, Comment, PostReactionItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { api } from '../lib/api';
@@ -71,14 +71,23 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estados de Reacciones Multi-Emoji
+  // Estados de Reacciones Multi-Emoji y Visualizador
   const [likesCount, setLikesCount] = useState(post._count?.likes ?? 0);
   const [userReaction, setUserReaction] = useState<string | null>(post.userReaction || null);
   const [topReactions, setTopReactions] = useState<string[]>(
     post.topReactions || (post.isLiked ? ['❤️'] : [])
   );
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>(
+    post.reactionCounts || {}
+  );
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  // Estados del Modal Visualizador de Reacciones
+  const [showReactionsModal, setShowReactionsModal] = useState(false);
+  const [reactionsList, setReactionsList] = useState<PostReactionItem[]>([]);
+  const [loadingReactions, setLoadingReactions] = useState(false);
+  const [activeReactionFilter, setActiveReactionFilter] = useState<string>('ALL');
 
   // Estados de Comentarios
   const [commentsCount, setCommentsCount] = useState(post._count?.comments ?? 0);
@@ -101,6 +110,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     setLikesCount(post._count?.likes ?? 0);
     setUserReaction(post.userReaction || null);
     setTopReactions(post.topReactions || (post.isLiked ? ['❤️'] : []));
+    setReactionCounts(post.reactionCounts || {});
     setCommentsCount(post._count?.comments ?? 0);
     setIsBookmarked(post.isBookmarked || false);
   }, [post]);
@@ -115,10 +125,12 @@ export const PostCard: React.FC<PostCardProps> = ({
       isLiked: boolean;
       userReaction?: string | null;
       topReactions?: string[];
+      reactionCounts?: Record<string, number>;
     }) => {
       if (data.postId === post.id) {
         setLikesCount(data.likesCount);
         if (data.topReactions) setTopReactions(data.topReactions);
+        if (data.reactionCounts) setReactionCounts(data.reactionCounts);
       }
     };
 
@@ -156,6 +168,26 @@ export const PostCard: React.FC<PostCardProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Abrir Visualizador de Reacciones (con filtro opcional por emoji)
+  const handleOpenReactionsModal = async (filterEmoji = 'ALL') => {
+    setActiveReactionFilter(filterEmoji);
+    setShowReactionsModal(true);
+    setLoadingReactions(true);
+    try {
+      const res = await api.getPostReactions(post.id);
+      if (res.success) {
+        setReactionsList(res.data.reactions || []);
+        if (res.data.reactionCounts) setReactionCounts(res.data.reactionCounts);
+        if (res.data.topReactions) setTopReactions(res.data.topReactions);
+        setLikesCount(res.data.totalCount);
+      }
+    } catch (err) {
+      console.error('Error al cargar reacciones detalladas:', err);
+    } finally {
+      setLoadingReactions(false);
+    }
+  };
+
   // Manejador de Reacción
   const handleSelectReaction = async (emoji: string) => {
     if (!isAuthenticated) {
@@ -183,6 +215,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         setLikesCount(res.data.likesCount);
         setUserReaction(res.data.userReaction);
         if (res.data.topReactions) setTopReactions(res.data.topReactions);
+        if (res.data.reactionCounts) setReactionCounts(res.data.reactionCounts);
       }
     } catch (err) {
       console.error(err);
@@ -492,31 +525,52 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* 4. Footer de Interacción (Estilo Facebook) */}
 
-      {/* 4.1. Fila de Métricas (Reacciones y Contador de Comentarios) */}
-      <div className="flex items-center justify-between py-1.5 px-1 text-xs text-slate-500 dark:text-slate-400">
-        <div className="flex items-center space-x-1.5">
-          {topReactions.length > 0 && (
-            <div className="flex items-center -space-x-1">
-              {topReactions.map((em, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 text-xs shadow-xs border border-white dark:border-slate-800"
+      {/* 4.1. Fila de Métricas (Contador Desglosado por Emoji y Botón de Visualizador) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 py-1.5 px-1 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {likesCount > 0 ? (
+            <>
+              {/* Píldoras individuales por Emoji con su Contador en Vivo */}
+              {(Object.keys(reactionCounts).length > 0
+                ? Object.entries(reactionCounts)
+                : topReactions.map((em) => [em, 1] as [string, number])
+              ).map(([em, count]) => (
+                <button
+                  key={em}
+                  type="button"
+                  onClick={() => handleOpenReactionsModal(em)}
+                  className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all hover:scale-105 ${
+                    userReaction === em
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700'
+                      : 'bg-slate-100 dark:bg-slate-700/70 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-600 hover:bg-slate-200/70 dark:hover:bg-slate-600'
+                  }`}
+                  title={`Ver quiénes reaccionaron con ${em}`}
                 >
-                  {em}
-                </span>
+                  <span>{em}</span>
+                  <span>{count}</span>
+                </button>
               ))}
-            </div>
+
+              {/* Botón Resumen Total para abrir el Visualizador Completo */}
+              <button
+                type="button"
+                onClick={() => handleOpenReactionsModal('ALL')}
+                className="font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline ml-1 transition-colors"
+                title="Abrir visualizador detallado de reacciones"
+              >
+                {likesCount} {likesCount === 1 ? 'reacción' : 'reacciones'}
+              </button>
+            </>
+          ) : (
+            <span className="font-medium text-slate-400">Sé el primero en reaccionar</span>
           )}
-          <span className="font-medium">
-            {likesCount > 0 ? `${likesCount} Me gusta` : 'Sé el primero en reaccionar'}
-          </span>
         </div>
 
         <button
           onClick={handleToggleComments}
           className="hover:underline font-medium text-slate-500 dark:text-slate-400"
         >
-          {commentsCount} comentarios
+          {commentsCount} {commentsCount === 1 ? 'comentario' : 'comentarios'}
         </button>
       </div>
 
@@ -681,6 +735,137 @@ export const PostCard: React.FC<PostCardProps> = ({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 5. Modal Visualizador Detallado de Reacciones (Estilo Red Social) */}
+      {showReactionsModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+          onClick={() => setShowReactionsModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Cabecera del Modal */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Reacciones de la publicación
+                </h3>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                  {likesCount}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReactionsModal(false)}
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                aria-label="Cerrar visualizador"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Pestañas de Filtro por Emoji con Contador */}
+            <div className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-700 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveReactionFilter('ALL')}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
+                  activeReactionFilter === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
+                }`}
+              >
+                Todas ({reactionsList.length || likesCount})
+              </button>
+
+              {Object.entries(reactionCounts).map(([em, count]) => (
+                <button
+                  key={em}
+                  type="button"
+                  onClick={() => setActiveReactionFilter(em)}
+                  className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
+                    activeReactionFilter === em
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
+                  }`}
+                >
+                  <span>{em}</span>
+                  <span>{count}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Lista de Usuarios que Reaccionaron */}
+            <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60 p-2">
+              {loadingReactions ? (
+                <div className="py-10 text-center text-xs text-slate-400">
+                  Cargando usuarios que reaccionaron...
+                </div>
+              ) : (
+                (() => {
+                  const filtered =
+                    activeReactionFilter === 'ALL'
+                      ? reactionsList
+                      : reactionsList.filter((r) => r.emoji === activeReactionFilter);
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="py-8 text-center text-xs text-slate-400">
+                        No hay reacciones con este filtro todavía.
+                      </div>
+                    );
+                  }
+
+                  return filtered.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors"
+                    >
+                      <Link
+                        href={`/profile/${item.user.username}`}
+                        onClick={() => setShowReactionsModal(false)}
+                        className="flex items-center space-x-3 min-w-0 group"
+                      >
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={
+                              item.user.avatarUrl ||
+                              'https://api.dicebear.com/7.x/initials/svg?seed=U'
+                            }
+                            alt={item.user.fullName}
+                            className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                          />
+                          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs">
+                            {item.emoji}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
+                            {item.user.fullName}
+                          </p>
+                          <p className="text-[11px] text-slate-400 truncate">
+                            @{item.user.username}
+                          </p>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href={`/profile/${item.user.username}`}
+                        onClick={() => setShowReactionsModal(false)}
+                        className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors flex-shrink-0"
+                      >
+                        Ver perfil
+                      </Link>
+                    </div>
+                  ));
+                })()
+              )}
+            </div>
+          </div>
         </div>
       )}
     </article>

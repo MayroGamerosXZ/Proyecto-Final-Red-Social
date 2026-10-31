@@ -94,13 +94,22 @@ export const emitNotificationToUser = (recipientId: string, notification: unknow
   io.to(`user_${recipientId}`).emit('notification:new', notification);
 };
 
-export const emitPostLikeUpdated = (postId: string, likesCount: number, isLiked: boolean, actorId: string) => {
+export const emitPostLikeUpdated = (
+  postId: string,
+  likesCount: number,
+  isLiked: boolean,
+  actorId: string,
+  topReactions?: string[],
+  reactionCounts?: Record<string, number>
+) => {
   if (!io) return;
   io.to('feed_global').emit('post:like_updated', {
     postId,
     likesCount,
     isLiked,
     actorId,
+    topReactions,
+    reactionCounts,
   });
 };
 

@@ -34,7 +34,21 @@ export interface Post {
   isLiked?: boolean;
   userReaction?: string | null;
   topReactions?: string[];
+  reactionCounts?: Record<string, number>;
   isBookmarked?: boolean;
+}
+
+export interface PostReactionItem {
+  id: string;
+  emoji: string;
+  createdAt: string;
+  user: {
+    id: string;
+    username: string;
+    fullName: string;
+    avatarUrl?: string | null;
+    bio?: string | null;
+  };
 }
 
 export interface Comment {

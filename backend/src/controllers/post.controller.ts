@@ -7,6 +7,21 @@ import {
   emitCommentCreated,
 } from '../sockets/socket.server';
 
+function computeReactionStats(likes: { emoji: string }[]) {
+  const counts: Record<string, number> = {};
+  for (const l of likes) {
+    const em = l.emoji || '❤️';
+    counts[em] = (counts[em] || 0) + 1;
+  }
+  const sortedEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const reactionCounts: Record<string, number> = {};
+  for (const [em, c] of sortedEntries) {
+    reactionCounts[em] = c;
+  }
+  const topReactions = sortedEntries.map(([em]) => em);
+  return { reactionCounts, topReactions };
+}
+
 export const createPost = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
@@ -44,6 +59,7 @@ export const createPost = async (req: AuthenticatedRequest, res: Response, next:
         isLiked: false,
         userReaction: null,
         topReactions: [],
+        reactionCounts: {},
       },
     });
   } catch (error) {
@@ -106,7 +122,7 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response, next:
     });
 
     const userLike = updatedPost.likes.find((l) => l.userId === userId);
-    const topReactions = Array.from(new Set(updatedPost.likes.map((l) => l.emoji)));
+    const { topReactions, reactionCounts } = computeReactionStats(updatedPost.likes);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { likes, ...rest } = updatedPost;
 
@@ -118,6 +134,7 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response, next:
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        reactionCounts,
       },
     });
   } catch (error) {
@@ -168,7 +185,7 @@ export const getGlobalFeed = async (req: Request, res: Response, next: NextFunct
 
     const formattedPosts = posts.map((post) => {
       const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
-      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const { topReactions, reactionCounts } = computeReactionStats(post.likes);
       const isBookmarked = Boolean(currentUserId && (post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, bookmarks, ...rest } = post as any;
@@ -177,6 +194,7 @@ export const getGlobalFeed = async (req: Request, res: Response, next: NextFunct
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        reactionCounts,
         isBookmarked,
       };
     });
@@ -242,7 +260,7 @@ export const getFollowingFeed = async (req: AuthenticatedRequest, res: Response,
 
     const formattedPosts = posts.map((post) => {
       const userLike = post.likes.find((l) => l.userId === userId);
-      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const { topReactions, reactionCounts } = computeReactionStats(post.likes);
       const isBookmarked = Boolean((post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, bookmarks, ...rest } = post as any;
@@ -251,6 +269,7 @@ export const getFollowingFeed = async (req: AuthenticatedRequest, res: Response,
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        reactionCounts,
         isBookmarked,
       };
     });
@@ -315,7 +334,7 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
 
     const formattedPosts = posts.map((post) => {
       const userLike = currentUserId ? post.likes.find((l) => l.userId === currentUserId) : null;
-      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const { topReactions, reactionCounts } = computeReactionStats(post.likes);
       const isBookmarked = Boolean(currentUserId && (post as any).bookmarks?.length > 0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, bookmarks, ...rest } = post as any;
@@ -324,6 +343,7 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        reactionCounts,
         isBookmarked,
       };
     });
@@ -473,10 +493,10 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
     });
 
     const likesCount = allLikes.length;
-    const topReactions = Array.from(new Set(allLikes.map((l) => l.emoji))).slice(0, 3);
+    const { topReactions, reactionCounts } = computeReactionStats(allLikes);
 
-    // Emitir por WebSocket
-    emitPostLikeUpdated(postId, likesCount, isLiked, userId);
+    // Emitir por WebSocket incluyendo el desglose de reacciones en vivo
+    emitPostLikeUpdated(postId, likesCount, isLiked, userId, topReactions, reactionCounts);
 
     return res.status(200).json({
       success: true,
@@ -486,6 +506,7 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response, next:
         isLiked,
         userReaction,
         topReactions,
+        reactionCounts,
       },
     });
   } catch (error) {
@@ -693,7 +714,7 @@ export const getSavedPosts = async (req: AuthenticatedRequest, res: Response, ne
     const formattedPosts = bookmarks.map((b) => {
       const post = b.post;
       const userLike = post.likes.find((l) => l.userId === userId);
-      const topReactions = Array.from(new Set(post.likes.map((l) => l.emoji))).slice(0, 3);
+      const { topReactions, reactionCounts } = computeReactionStats(post.likes);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { likes, ...rest } = post;
       return {
@@ -701,6 +722,7 @@ export const getSavedPosts = async (req: AuthenticatedRequest, res: Response, ne
         isLiked: !!userLike,
         userReaction: userLike ? userLike.emoji : null,
         topReactions,
+        reactionCounts,
         isBookmarked: true,
         bookmarkedAt: b.createdAt,
       };
@@ -709,6 +731,47 @@ export const getSavedPosts = async (req: AuthenticatedRequest, res: Response, ne
     return res.status(200).json({
       success: true,
       data: formattedPosts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPostReactions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id: postId } = req.params;
+
+    const likes = await prisma.like.findMany({
+      where: { postId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+      },
+    });
+
+    const { topReactions, reactionCounts } = computeReactionStats(likes);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalCount: likes.length,
+        topReactions,
+        reactionCounts,
+        reactions: likes.map((l) => ({
+          id: l.id,
+          emoji: l.emoji || '❤️',
+          createdAt: l.createdAt,
+          user: l.user,
+        })),
+      },
     });
   } catch (error) {
     next(error);
