@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ProfileView } from '../../../components/ProfileView';
@@ -12,8 +12,8 @@ interface ProfilePageProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-// Server-Side Data Fetching (SSR)
-async function getProfileData(username: string): Promise<User | null> {
+// Server-Side Data Fetching (SSR) con deduplicación por request (React.cache)
+const getProfileData = cache(async (username: string): Promise<User | null> => {
   try {
     const res = await fetch(`${API_BASE_URL}/api/users/${username}`, {
       cache: 'no-store', // Garantiza SSR en cada petición para el perfil más reciente
@@ -30,9 +30,9 @@ async function getProfileData(username: string): Promise<User | null> {
     console.error('SSR getProfileData error:', error);
     return null;
   }
-}
+});
 
-async function getUserPosts(username: string): Promise<Post[]> {
+const getUserPosts = cache(async (username: string): Promise<Post[]> => {
   try {
     const res = await fetch(`${API_BASE_URL}/api/posts/user/${username}`, {
       cache: 'no-store', // SSR
@@ -45,7 +45,7 @@ async function getUserPosts(username: string): Promise<Post[]> {
     console.error('SSR getUserPosts error:', error);
     return [];
   }
-}
+});
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const profile = await getProfileData(params.username);
@@ -59,13 +59,15 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const profile = await getProfileData(params.username);
+  // Ejecutar ambas consultas SSR en paralelo para reducir la latencia a la mitad
+  const [profile, posts] = await Promise.all([
+    getProfileData(params.username),
+    getUserPosts(params.username),
+  ]);
 
   if (!profile) {
     notFound();
   }
-
-  const posts = await getUserPosts(params.username);
 
   return <ProfileView initialProfile={profile} initialPosts={posts} />;
 }

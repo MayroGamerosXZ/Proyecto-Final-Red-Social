@@ -595,14 +595,27 @@ export const PostCard: React.FC<PostCardProps> = ({
           <span>Comentar</span>
         </button>
 
-        {/* Botón 3: Compartir (Copia link directo) */}
+        {/* Botón 3: Compartir (Copia link directo con feedback inmediato) */}
         <button
           onClick={handleShare}
-          className="flex items-center justify-center space-x-2 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white transition-colors"
-          title="Copiar enlace de esta publicación"
+          className={`flex items-center justify-center space-x-2 py-2 rounded-xl text-xs font-bold transition-colors ${
+            showCopiedToast
+              ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
+          }`}
+          title="Copiar enlace directo de esta publicación"
         >
-          <Share2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-          <span>Compartir</span>
+          {showCopiedToast ? (
+            <>
+              <Check className="w-4 h-4 text-emerald-500 stroke-[2.5]" />
+              <span>¡Enlace copiado!</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Compartir</span>
+            </>
+          )}
         </button>
       </div>
 
