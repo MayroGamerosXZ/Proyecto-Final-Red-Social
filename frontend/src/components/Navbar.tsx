@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isGuest, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { toggleMessenger, totalUnread } = useChat();
   const pathname = usePathname();
@@ -32,18 +32,20 @@ export const Navbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between gap-3 sm:gap-4">
-        {/* Lado Izquierdo: Logo + Buscador Avanzado en Vivo */}
+        {/* Lado Izquierdo: Logo Oficial + Nombre (Estilo Facebook) + Buscador */}
         <div className="flex items-center gap-3 md:gap-5 min-w-0">
           <Link href="/" className="flex items-center space-x-2.5 flex-shrink-0 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div className="hidden xs:block">
-              <span className="font-extrabold text-lg bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                SocialPulse
+            <img
+              src="/logo-icon.png"
+              alt="SocialPulse"
+              className="w-10 h-10 rounded-xl object-cover shadow-md shadow-indigo-500/25 border border-indigo-500/30 group-hover:scale-105 transition-transform"
+            />
+            <div className="hidden xs:flex items-baseline space-x-1">
+              <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
+                Social
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold ml-1.5 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">
-                Live
+              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 dark:from-indigo-400 dark:via-purple-400 dark:to-fuchsia-400 bg-clip-text text-transparent">
+                Pulse
               </span>
             </div>
           </Link>
@@ -68,17 +70,19 @@ export const Navbar: React.FC = () => {
             <span>Feed</span>
           </Link>
 
-          <Link
-            href="/saved"
-            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              pathname === '/saved'
-                ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Bookmark className="w-4 h-4 text-amber-500" />
-            <span>Guardados</span>
-          </Link>
+          {isAuthenticated && (
+            <Link
+              href="/saved"
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                pathname === '/saved'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Bookmark className="w-4 h-4 text-amber-500" />
+              <span>Guardados</span>
+            </Link>
+          )}
 
           <Link
             href="/#tendencias"
@@ -151,6 +155,11 @@ export const Navbar: React.FC = () => {
             </>
           ) : (
             <div className="flex items-center space-x-2">
+              {isGuest && (
+                <span className="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                  Modo Invitado
+                </span>
+              )}
               <Link
                 href="/login"
                 className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"

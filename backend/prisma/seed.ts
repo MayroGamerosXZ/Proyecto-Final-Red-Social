@@ -51,7 +51,18 @@ async function main() {
     },
   });
 
-  console.log(`✅ Usuarios creados: ${user1.username}, ${user2.username}, ${user3.username}`);
+  const user4 = await prisma.user.create({
+    data: {
+      username: 'yoel_monzon',
+      email: 'yoel@example.com',
+      passwordHash,
+      fullName: 'Ing. Yoel Monzón',
+      bio: 'Ingeniero y Catedrático de Desarrollo Web | Evaluador Oficial de SocialPulse 🎓🚀',
+      avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&h=200&q=80',
+    },
+  });
+
+  console.log(`✅ Usuarios creados: ${user1.username}, ${user2.username}, ${user3.username}, ${user4.username}`);
 
   // 2. Relaciones de seguimiento (Follows)
   await prisma.follow.create({

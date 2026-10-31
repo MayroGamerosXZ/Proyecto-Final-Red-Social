@@ -76,8 +76,20 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </div>
           </Link>
         ) : (
-          <div className="p-2 -mx-2 text-center">
-            <p className="text-xs text-slate-400">Bienvenido a SocialPulse</p>
+          <div className="flex items-center space-x-3 p-2 -mx-2">
+            <img
+              src="/logo-icon.png"
+              alt="Visitante Invitado"
+              className="w-10 h-10 rounded-xl object-cover border border-indigo-500/30 shadow-xs"
+            />
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                Visitante Invitado
+              </h4>
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
+                Modo Solo Lectura
+              </p>
+            </div>
           </div>
         )}
 
@@ -97,43 +109,53 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <span>Inicio (Feed)</span>
           </button>
 
-          {user && (
+          {user ? (
+            <>
+              <Link
+                href={`/profile/${user.username}`}
+                className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                <User className="w-4 h-4 text-indigo-500" />
+                <span>Mi Perfil</span>
+              </Link>
+
+              <button
+                onClick={() => handleTabClick('following')}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors text-left ${
+                  activeTab === 'following' && pathname === '/'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Users className="w-4 h-4 text-violet-500" />
+                <span>Amigos / Siguiendo</span>
+              </button>
+
+              {/* Acceso a Guardados (Bookmarks) ACTIVO */}
+              <Link
+                href="/saved"
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                  activeTab === 'saved'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-indigo-600 dark:hover:text-indigo-400'
+                }`}
+              >
+                <Bookmark className={`w-4 h-4 text-amber-500 ${activeTab === 'saved' ? 'fill-current' : ''}`} />
+                <span className="flex-1">Guardados</span>
+                <span className="text-[9px] bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold px-1.5 py-0.5 rounded">
+                  Nuevo
+                </span>
+              </Link>
+            </>
+          ) : (
             <Link
-              href={`/profile/${user.username}`}
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              href="/login"
+              className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
             >
               <User className="w-4 h-4 text-indigo-500" />
-              <span>Mi Perfil</span>
+              <span>Iniciar Sesión / Registrarse</span>
             </Link>
           )}
-
-          <button
-            onClick={() => handleTabClick('following')}
-            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors text-left ${
-              activeTab === 'following' && pathname === '/'
-                ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold'
-                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Users className="w-4 h-4 text-violet-500" />
-            <span>Amigos / Siguiendo</span>
-          </button>
-
-          {/* Acceso a Guardados (Bookmarks) ACTIVO */}
-          <Link
-            href="/saved"
-            className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
-              activeTab === 'saved'
-                ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold'
-                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-indigo-600 dark:hover:text-indigo-400'
-            }`}
-          >
-            <Bookmark className={`w-4 h-4 text-amber-500 ${activeTab === 'saved' ? 'fill-current' : ''}`} />
-            <span className="flex-1">Guardados</span>
-            <span className="text-[9px] bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold px-1.5 py-0.5 rounded">
-              Nuevo
-            </span>
-          </Link>
 
           <a
             href="https://proyecto-final-red-social.onrender.com/api/docs"

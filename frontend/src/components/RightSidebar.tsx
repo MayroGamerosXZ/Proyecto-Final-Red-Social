@@ -89,27 +89,36 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     </div>
                   </Link>
 
-                  <button
-                    onClick={() => handleFollowToggle(u)}
-                    disabled={isLoading}
-                    className={`flex items-center space-x-1 px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex-shrink-0 ${
-                      isFollowing
-                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 hover:bg-indigo-700'
-                        : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
-                    }`}
-                  >
-                    {isFollowing ? (
-                      <>
-                        <Check className="w-3 h-3 stroke-[3]" />
-                        <span>Siguiendo</span>
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-3 h-3" />
-                        <span>Seguir</span>
-                      </>
-                    )}
-                  </button>
+                  {user ? (
+                    <button
+                      onClick={() => handleFollowToggle(u)}
+                      disabled={isLoading}
+                      className={`flex items-center space-x-1 px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex-shrink-0 ${
+                        isFollowing
+                          ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 hover:bg-indigo-700'
+                          : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
+                      }`}
+                    >
+                      {isFollowing ? (
+                        <>
+                          <Check className="w-3 h-3 stroke-[3]" />
+                          <span>Siguiendo</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3 h-3" />
+                          <span>Seguir</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/profile/${u.username}`}
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex-shrink-0"
+                    >
+                      Ver perfil
+                    </Link>
+                  )}
                 </div>
               );
             })}

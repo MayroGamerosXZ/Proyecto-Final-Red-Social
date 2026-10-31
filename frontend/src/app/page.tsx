@@ -9,34 +9,39 @@ import { RightSidebar } from '../components/RightSidebar';
 import { Post, User } from '../types';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Users, X, Search } from 'lucide-react';
+import { Sparkles, Users, X, Search, Eye, LogIn } from 'lucide-react';
+import Link from 'next/link';
 
 function FeedContent() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isGuest, isLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const tabParam = searchParams.get('tab') || '';
 
-  const [tab, setTab] = useState<'global' | 'following'>(tabParam === 'following' ? 'following' : 'global');
+  const [tab, setTab] = useState<'global' | 'following'>(
+    tabParam === 'following' && isAuthenticated ? 'following' : 'global'
+  );
   const [posts, setPosts] = useState<Post[]>([]);
   const [suggestions, setSuggestions] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string>(queryParam);
 
-  // Requerimiento primario: Si no está autenticado, redirigir inmediatamente a /login
+  // Requerimiento primario: Si no está autenticado ni en modo invitado, redirigir a /login
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !isGuest) {
       router.replace('/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, isGuest, router]);
 
   // Si cambia la pestaña por parámetro de URL, sincronizar el feed
   useEffect(() => {
-    if (tabParam === 'following' || tabParam === 'global') {
-      setTab(tabParam as 'global' | 'following');
+    if (tabParam === 'following' && isAuthenticated) {
+      setTab('following');
+    } else if (tabParam === 'global') {
+      setTab('global');
     }
-  }, [tabParam]);
+  }, [tabParam, isAuthenticated]);
 
   // Si cambia el parámetro de búsqueda en la URL, actualizar el filtro
   useEffect(() => {
@@ -45,10 +50,11 @@ function FeedContent() {
 
   // Cargar publicaciones según la pestaña seleccionada
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated && !isGuest) return;
 
     setLoading(true);
-    const fetchPosts = tab === 'global' ? api.getGlobalFeed() : api.getFollowingFeed();
+    const fetchPosts =
+      tab === 'global' || !isAuthenticated ? api.getGlobalFeed() : api.getFollowingFeed();
 
     fetchPosts
       .then((res) => {
@@ -58,11 +64,11 @@ function FeedContent() {
       })
       .catch((err) => console.error('Error al cargar posts:', err))
       .finally(() => setLoading(false));
-  }, [tab, isAuthenticated]);
+  }, [tab, isAuthenticated, isGuest]);
 
   // Cargar usuarios sugeridos
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated && !isGuest) return;
 
     api
       .getSuggestions()
@@ -72,7 +78,7 @@ function FeedContent() {
         }
       })
       .catch((err) => console.error('Error al cargar sugerencias:', err));
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isGuest]);
 
   const handlePostCreated = (newPost: Post) => {
     setPosts((prev) => [newPost, ...prev]);
@@ -115,14 +121,14 @@ function FeedContent() {
     : posts;
 
   // Pantalla de carga mientras se valida la sesión en el inicio
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || (!isAuthenticated && !isGuest)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 animate-pulse">
           <Sparkles className="w-6 h-6" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-bold text-slate-800">Verificando sesión...</p>
+          <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Verificando sesión...</p>
           <p className="text-xs text-slate-400 mt-0.5">
             Redirigiendo al inicio de sesión seguro de SocialPulse
           </p>
@@ -141,6 +147,10 @@ function FeedContent() {
           <LeftSidebar
             onSelectTag={handleTagClick}
             onSelectTab={(selected) => {
+              if (selected === 'following' && !isAuthenticated) {
+                router.push('/login');
+                return;
+              }
               setTab(selected);
               clearFilter();
               if (selected === 'following') {
@@ -175,20 +185,22 @@ function FeedContent() {
               <Sparkles className="w-3.5 h-3.5" />
               <span>Para ti</span>
             </button>
-            <button
-              onClick={() => {
-                setTab('following');
-                clearFilter();
-              }}
-              className={`flex-1 sm:flex-initial flex items-center justify-center space-x-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${
-                tab === 'following'
-                  ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Siguiendo</span>
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setTab('following');
+                  clearFilter();
+                }}
+                className={`flex-1 sm:flex-initial flex items-center justify-center space-x-2 py-2 px-4 rounded-xl text-xs font-bold transition-all ${
+                  tab === 'following'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Siguiendo</span>
+              </button>
+            )}
           </div>
 
           <span className="hidden sm:inline-block text-[11px] font-semibold text-slate-400 dark:text-slate-500 pr-3">
@@ -215,8 +227,33 @@ function FeedContent() {
           </div>
         )}
 
-        {/* Creador de Publicaciones Expandible / Colapsable */}
-        <CreatePostCard onPostCreated={handlePostCreated} />
+        {/* Creador de Publicaciones (Solo Usuarios Autenticados) vs Banner Modo Invitado */}
+        {isAuthenticated ? (
+          <CreatePostCard onPostCreated={handlePostCreated} />
+        ) : (
+          <div className="bg-gradient-to-r from-indigo-50/90 via-white to-violet-50/90 dark:from-slate-800 dark:via-slate-800/95 dark:to-indigo-950/40 rounded-2xl p-4 sm:p-5 border border-indigo-200/70 dark:border-indigo-800/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+                  Estás navegando en Modo Invitado (Solo Lectura)
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  Puedes explorar publicaciones, perfiles y tendencias. Inicia sesión para publicar, reaccionar, comentar o usar el chat directo.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-500/20 transition-all flex-shrink-0"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Iniciar Sesión</span>
+            </Link>
+          </div>
+        )}
 
         {/* Lista de Publicaciones con Skeletons */}
         {loading ? (

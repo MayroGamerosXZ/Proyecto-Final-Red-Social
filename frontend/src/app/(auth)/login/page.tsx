@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
-import { LogIn, Sparkles, AlertCircle, ShieldCheck, KeyRound } from 'lucide-react';
+import { LogIn, AlertCircle, Eye } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, enterGuestMode, isAuthenticated, isLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,23 +41,36 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickFill = (userEmail: string, userPass: string) => {
-    setEmail(userEmail);
-    setPassword(userPass);
-    setError('');
+  const handleGuestExplore = () => {
+    enterGuestMode();
+    router.push('/');
   };
 
   return (
     <div className="max-w-md mx-auto my-6 sm:my-10 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none">
-        {/* Encabezado */}
+        {/* Encabezado con Logo Oficial SocialPulse */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white mx-auto mb-3 shadow-md shadow-indigo-500/20">
-            <Sparkles className="w-6 h-6" />
+          <div className="inline-flex items-center justify-center gap-3 mb-3 p-2.5 px-4 rounded-2xl bg-[#101524] shadow-lg shadow-indigo-500/20 border border-indigo-500/30">
+            <img
+              src="/logo-icon.png"
+              alt="SocialPulse Logo"
+              className="w-11 h-11 rounded-xl object-cover"
+            />
+            <div className="flex items-baseline space-x-1 pr-1">
+              <span className="font-extrabold text-2xl tracking-tight text-white">
+                Social
+              </span>
+              <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+                Pulse
+              </span>
+            </div>
           </div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-800">
-            Autenticación Requerida
-          </span>
+          <div>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-800">
+              Acceso a la Plataforma
+            </span>
+          </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">Iniciar Sesión</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Ingresa tu correo y contraseña registrados para acceder a la red social
@@ -111,35 +124,19 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Accesos Rápidos de Prueba para el Evaluador */}
-        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
-          <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-400 mb-2.5 flex items-center gap-1">
-            <KeyRound className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-            Cuentas registradas para pruebas rápidas:
+        {/* Opción de Modo Invitado (Solo Lectura) */}
+        <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+          <button
+            type="button"
+            onClick={handleGuestExplore}
+            className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700/60 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200/80 dark:border-slate-600 transition-all"
+          >
+            <Eye className="w-4 h-4 text-indigo-500" />
+            <span>Explorar como Invitado (Solo Lectura)</span>
+          </button>
+          <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
+            Visualiza publicaciones, tendencias y perfiles sin iniciar sesión.
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('mayro@example.com', 'Password123!')}
-              className="px-2 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded-lg text-[11px] font-bold border border-indigo-100 dark:border-indigo-800 transition-colors text-center"
-            >
-              @mayro_xz
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('carlos@example.com', 'Password123!')}
-              className="px-2 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-bold border border-slate-200 dark:border-slate-600 transition-colors text-center"
-            >
-              @carlos_dev
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('ana@example.com', 'Password123!')}
-              className="px-2 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-bold border border-slate-200 dark:border-slate-600 transition-colors text-center"
-            >
-              @ana_tech
-            </button>
-          </div>
         </div>
 
         {/* Enlace a Registro */}

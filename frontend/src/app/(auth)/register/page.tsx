@@ -54,8 +54,20 @@ export default function RegisterPage() {
     <div className="max-w-md mx-auto my-8">
       <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white mx-auto mb-3 shadow-md shadow-indigo-500/20">
-            <Sparkles className="w-6 h-6" />
+          <div className="inline-flex items-center justify-center gap-3 mb-3 p-2.5 px-4 rounded-2xl bg-[#101524] shadow-lg shadow-indigo-500/20 border border-indigo-500/30">
+            <img
+              src="/logo-icon.png"
+              alt="SocialPulse Logo"
+              className="w-11 h-11 rounded-xl object-cover"
+            />
+            <div className="flex items-baseline space-x-1 pr-1">
+              <span className="font-extrabold text-2xl tracking-tight text-white">
+                Social
+              </span>
+              <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+                Pulse
+              </span>
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Crea tu cuenta</h1>
           <p className="text-xs text-slate-400 dark:text-slate-400 mt-1">Conéctate, comparte y recibe notificaciones en vivo</p>

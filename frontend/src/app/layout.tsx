@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: 'SocialPulse - Red Social Fullstack en Tiempo Real',
   description:
     'Plataforma social moderna con renderizado en el servidor (SSR), WebSockets en vivo, Swagger API y persistencia relacional PostgreSQL.',
+  icons: {
+    icon: '/logo-icon.png',
+    apple: '/logo-icon.png',
+  },
 };
 
 export default function RootLayout({
