@@ -107,6 +107,8 @@ export interface Conversation {
     username: string;
     fullName: string;
     avatarUrl?: string | null;
+    isOnline?: boolean;
+    lastSeen?: string | null;
   };
   lastMessage: {
     id: string;

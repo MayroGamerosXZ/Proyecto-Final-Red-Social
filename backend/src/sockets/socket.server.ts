@@ -2,9 +2,28 @@ import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
+import { prisma } from '../config/db';
 import { AuthUserPayload } from '../middlewares/authMiddleware';
 
 let io: SocketIOServer | null = null;
+
+// Registro en memoria de sesiones activas y última conexión por usuario
+const onlineUsers = new Map<string, Set<string>>();
+const lastSeenMap = new Map<string, string>();
+
+export const isUserOnline = (userId: string): boolean => {
+  const sockets = onlineUsers.get(userId);
+  return Boolean(sockets && sockets.size > 0);
+};
+
+export const getUserLastSeen = (userId: string): string | null => {
+  return lastSeenMap.get(userId) || null;
+};
+
+export const touchUserActivity = (userId: string): void => {
+  const now = new Date();
+  lastSeenMap.set(userId, now.toISOString());
+};
 
 export interface AuthenticatedSocket extends Socket {
   user?: AuthUserPayload;
@@ -63,11 +82,27 @@ export const initSocketServer = (httpServer: HttpServer): SocketIOServer => {
     const userId = socket.user?.userId;
     console.log(`[Socket.io] Cliente conectado: ${socket.id} (Usuario: ${userId || 'Anónimo'})`);
 
-    // Si está autenticado, unirlo a su sala privada personal
+    // Si está autenticado, unirlo a su sala privada personal y registrar presencia en línea
     if (userId) {
       const userRoom = `user_${userId}`;
       socket.join(userRoom);
       console.log(`[Socket.io] Usuario ${userId} unido a sala: ${userRoom}`);
+
+      if (!onlineUsers.has(userId)) {
+        onlineUsers.set(userId, new Set());
+      }
+      onlineUsers.get(userId)!.add(socket.id);
+
+      const now = new Date();
+      const nowIso = now.toISOString();
+      lastSeenMap.set(userId, nowIso);
+      prisma.user.update({ where: { id: userId }, data: { updatedAt: now } }).catch(() => {});
+
+      io?.emit('user:presence_changed', {
+        userId,
+        isOnline: true,
+        lastSeen: nowIso,
+      });
     }
 
     // Unirse a sala global del feed para recibir actualizaciones de posts
@@ -75,6 +110,23 @@ export const initSocketServer = (httpServer: HttpServer): SocketIOServer => {
 
     socket.on('disconnect', (reason) => {
       console.log(`[Socket.io] Cliente desconectado: ${socket.id} (${reason})`);
+      if (userId && onlineUsers.has(userId)) {
+        const userSockets = onlineUsers.get(userId)!;
+        userSockets.delete(socket.id);
+        if (userSockets.size === 0) {
+          onlineUsers.delete(userId);
+          const now = new Date();
+          const nowIso = now.toISOString();
+          lastSeenMap.set(userId, nowIso);
+          prisma.user.update({ where: { id: userId }, data: { updatedAt: now } }).catch(() => {});
+
+          io?.emit('user:presence_changed', {
+            userId,
+            isOnline: false,
+            lastSeen: nowIso,
+          });
+        }
+      }
     });
   });
 

@@ -1,7 +1,13 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../config/db';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
-import { emitDirectMessage, emitMessagesRead } from '../sockets/socket.server';
+import {
+  emitDirectMessage,
+  emitMessagesRead,
+  isUserOnline,
+  getUserLastSeen,
+  touchUserActivity,
+} from '../sockets/socket.server';
 
 /**
  * Obtener lista de conversaciones recientes del usuario autenticado
@@ -27,6 +33,7 @@ export const getConversations = async (
             username: true,
             fullName: true,
             avatarUrl: true,
+            updatedAt: true,
           },
         },
         receiver: {
@@ -35,6 +42,7 @@ export const getConversations = async (
             username: true,
             fullName: true,
             avatarUrl: true,
+            updatedAt: true,
           },
         },
       },
@@ -46,8 +54,20 @@ export const getConversations = async (
     for (const msg of messages) {
       const otherUser = msg.senderId === currentUserId ? msg.receiver : msg.sender;
       if (!conversationsMap.has(otherUser.id)) {
+        const memLastSeen = getUserLastSeen(otherUser.id);
+        const msgTime = msg.senderId === otherUser.id ? msg.createdAt : null;
+        const fallbackDate =
+          msgTime && msgTime > otherUser.updatedAt ? msgTime : otherUser.updatedAt;
+
         conversationsMap.set(otherUser.id, {
-          user: otherUser,
+          user: {
+            id: otherUser.id,
+            username: otherUser.username,
+            fullName: otherUser.fullName,
+            avatarUrl: otherUser.avatarUrl,
+            isOnline: isUserOnline(otherUser.id),
+            lastSeen: memLastSeen || fallbackDate.toISOString(),
+          },
           lastMessage: {
             id: msg.id,
             content: msg.content,
@@ -58,9 +78,18 @@ export const getConversations = async (
           unreadCount:
             msg.receiverId === currentUserId && !msg.isRead ? 1 : 0,
         });
-      } else if (msg.receiverId === currentUserId && !msg.isRead) {
+      } else {
         const existing = conversationsMap.get(otherUser.id);
-        existing.unreadCount += 1;
+        if (msg.receiverId === currentUserId && !msg.isRead) {
+          existing.unreadCount += 1;
+        }
+        if (
+          !getUserLastSeen(otherUser.id) &&
+          msg.senderId === otherUser.id &&
+          new Date(existing.user.lastSeen) < msg.createdAt
+        ) {
+          existing.user.lastSeen = msg.createdAt.toISOString();
+        }
       }
     }
 
@@ -95,6 +124,7 @@ export const getMessagesWithUser = async (
         username: true,
         fullName: true,
         avatarUrl: true,
+        updatedAt: true,
       },
     });
 
@@ -132,10 +162,24 @@ export const getMessagesWithUser = async (
       orderBy: { createdAt: 'asc' },
     });
 
+    const lastMsgFromOther = [...messages].reverse().find((m) => m.senderId === otherUserId);
+    const memLastSeen = getUserLastSeen(otherUserId);
+    const fallbackDate =
+      lastMsgFromOther && lastMsgFromOther.createdAt > otherUser.updatedAt
+        ? lastMsgFromOther.createdAt
+        : otherUser.updatedAt;
+
     return res.status(200).json({
       success: true,
       data: {
-        user: otherUser,
+        user: {
+          id: otherUser.id,
+          username: otherUser.username,
+          fullName: otherUser.fullName,
+          avatarUrl: otherUser.avatarUrl,
+          isOnline: isUserOnline(otherUserId),
+          lastSeen: memLastSeen || fallbackDate.toISOString(),
+        },
         messages,
       },
     });
@@ -208,7 +252,8 @@ export const sendMessage = async (
       },
     });
 
-    // Emitir mensaje en vivo por WebSocket a la sala del destinatario
+    // Actualizar última actividad del remitente y emitir mensaje en vivo por WebSocket
+    touchUserActivity(senderId);
     emitDirectMessage(receiverId, message);
 
     return res.status(201).json({

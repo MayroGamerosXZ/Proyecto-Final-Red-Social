@@ -11,6 +11,8 @@ interface ChatTargetUser {
   username: string;
   fullName: string;
   avatarUrl?: string | null;
+  isOnline?: boolean;
+  lastSeen?: string | null;
 }
 
 interface ChatContextType {
@@ -19,6 +21,7 @@ interface ChatContextType {
   conversations: Conversation[];
   totalUnread: number;
   openChatWith: (target: ChatTargetUser) => void;
+  syncTargetPresence: (userId: string, isOnline?: boolean, lastSeen?: string | null) => void;
   toggleMessenger: () => void;
   closeMessenger: () => void;
   refreshConversations: () => Promise<void>;
@@ -53,7 +56,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshConversations();
   }, [refreshConversations]);
 
-  // Escuchar mensajes entrantes en vivo vía WebSocket
+  // Escuchar mensajes entrantes y cambios de presencia en vivo vía WebSocket
   useEffect(() => {
     if (!socket || !isAuthenticated) return;
 
@@ -67,12 +70,59 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       refreshConversations();
     };
 
+    const handlePresenceChanged = (data: {
+      userId: string;
+      isOnline: boolean;
+      lastSeen: string;
+    }) => {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.user.id === data.userId
+            ? {
+                ...c,
+                user: {
+                  ...c.user,
+                  isOnline: data.isOnline,
+                  lastSeen: data.lastSeen,
+                },
+              }
+            : c
+        )
+      );
+      setActiveTarget((prev) =>
+        prev && prev.id === data.userId
+          ? {
+              ...prev,
+              isOnline: data.isOnline,
+              lastSeen: data.lastSeen,
+            }
+          : prev
+      );
+    };
+
     socket.on('chat:message_received', handleMessageReceived);
+    socket.on('user:presence_changed', handlePresenceChanged);
 
     return () => {
       socket.off('chat:message_received', handleMessageReceived);
+      socket.off('user:presence_changed', handlePresenceChanged);
     };
   }, [socket, isAuthenticated, activeTarget, isOpen, refreshConversations]);
+
+  const syncTargetPresence = useCallback(
+    (userId: string, isOnline?: boolean, lastSeen?: string | null) => {
+      setActiveTarget((prev) =>
+        prev && prev.id === userId
+          ? {
+              ...prev,
+              isOnline: isOnline ?? prev.isOnline,
+              lastSeen: lastSeen !== undefined ? lastSeen : prev.lastSeen,
+            }
+          : prev
+      );
+    },
+    []
+  );
 
   const openChatWith = (target: ChatTargetUser) => {
     setActiveTarget(target);
@@ -96,6 +146,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         conversations,
         totalUnread,
         openChatWith,
+        syncTargetPresence,
         toggleMessenger,
         closeMessenger,
         refreshConversations,

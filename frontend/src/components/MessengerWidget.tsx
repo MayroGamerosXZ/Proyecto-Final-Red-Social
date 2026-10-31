@@ -23,6 +23,7 @@ export const MessengerWidget: React.FC = () => {
     conversations,
     closeMessenger,
     openChatWith,
+    syncTargetPresence,
     refreshConversations,
   } = useChat();
   const { user, isAuthenticated } = useAuth();
@@ -34,9 +35,34 @@ export const MessengerWidget: React.FC = () => {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const formatLastSeen = (lastSeen?: string | null): string => {
+    if (!lastSeen) return 'Desconectado';
+    const date = new Date(lastSeen);
+    if (isNaN(date.getTime())) return 'Desconectado';
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+
+    if (diffMin < 1) return 'Últ. vez hace un momento';
+    if (diffMin < 60) return `Últ. vez hace ${diffMin} min`;
+
+    const isToday = date.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (isToday) return `Últ. vez hoy a las ${timeStr}`;
+    if (isYesterday) return `Últ. vez ayer a las ${timeStr}`;
+
+    const dateStr = date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+    return `Últ. vez el ${dateStr} a las ${timeStr}`;
+  };
+
   // Cargar mensajes cuando cambia el usuario activo
   useEffect(() => {
-    if (!activeTarget || !isAuthenticated) {
+    if (!activeTarget?.id || !isAuthenticated) {
       setMessages([]);
       return;
     }
@@ -47,12 +73,19 @@ export const MessengerWidget: React.FC = () => {
       .then((res) => {
         if (res.success) {
           setMessages(res.data.messages || []);
+          if (res.data.user) {
+            syncTargetPresence(
+              res.data.user.id,
+              res.data.user.isOnline,
+              res.data.user.lastSeen
+            );
+          }
           refreshConversations();
         }
       })
       .catch((err) => console.error('Error al cargar mensajes:', err))
       .finally(() => setLoadingMessages(false));
-  }, [activeTarget, isAuthenticated, refreshConversations]);
+  }, [activeTarget?.id, isAuthenticated, syncTargetPresence, refreshConversations]);
 
   // Scroll automático hacia el final de los mensajes
   useEffect(() => {
@@ -132,15 +165,41 @@ export const MessengerWidget: React.FC = () => {
           )}
 
           {activeTarget ? (
-            <div className="flex items-center space-x-2 min-w-0">
-              <img
-                src={activeTarget.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=U'}
-                alt={activeTarget.fullName}
-                className="w-8 h-8 rounded-full object-cover border border-white/40 flex-shrink-0"
-              />
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="relative flex-shrink-0">
+                <img
+                  src={activeTarget.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=U'}
+                  alt={activeTarget.fullName}
+                  className="w-8 h-8 rounded-full object-cover border border-white/40"
+                />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-indigo-700 ${
+                    activeTarget.isOnline ? 'bg-emerald-400' : 'bg-slate-400'
+                  }`}
+                  title={
+                    activeTarget.isOnline
+                      ? 'En línea ahora'
+                      : formatLastSeen(activeTarget.lastSeen)
+                  }
+                />
+              </div>
               <div className="min-w-0">
-                <h4 className="text-xs font-bold truncate">{activeTarget.fullName}</h4>
-                <p className="text-[10px] text-indigo-200 truncate">@{activeTarget.username}</p>
+                <div className="flex items-center space-x-1.5">
+                  <h4 className="text-xs font-bold truncate">{activeTarget.fullName}</h4>
+                  <span className="text-[10px] text-indigo-200/80 hidden sm:inline">
+                    @{activeTarget.username}
+                  </span>
+                </div>
+                {activeTarget.isOnline ? (
+                  <p className="text-[10px] text-emerald-300 font-medium flex items-center space-x-1 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    <span>En línea ahora</span>
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-indigo-200 truncate">
+                    {formatLastSeen(activeTarget.lastSeen)}
+                  </p>
+                )}
               </div>
             </div>
           ) : (
@@ -269,11 +328,21 @@ export const MessengerWidget: React.FC = () => {
                 onClick={() => openChatWith(c.user)}
                 className="flex items-center space-x-3 p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-2xl cursor-pointer transition-colors"
               >
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   <img
                     src={c.user.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=U'}
                     alt={c.user.fullName}
                     className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-600"
+                  />
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${
+                      c.user.isOnline ? 'bg-emerald-500' : 'bg-slate-400'
+                    }`}
+                    title={
+                      c.user.isOnline
+                        ? 'En línea ahora'
+                        : formatLastSeen(c.user.lastSeen)
+                    }
                   />
                   {c.unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-xs">
@@ -287,7 +356,7 @@ export const MessengerWidget: React.FC = () => {
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
                       {c.user.fullName}
                     </h4>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-slate-400 flex-shrink-0 ml-1">
                       {new Date(c.lastMessage.createdAt).toLocaleDateString([], {
                         month: 'short',
                         day: 'numeric',
@@ -297,6 +366,17 @@ export const MessengerWidget: React.FC = () => {
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                     {c.lastMessage.senderId === user?.id ? 'Tú: ' : ''}
                     {c.lastMessage.content}
+                  </p>
+                  <p className="text-[9.5px] mt-0.5 truncate">
+                    {c.user.isOnline ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        ● En línea
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 dark:text-slate-500">
+                        {formatLastSeen(c.user.lastSeen)}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
