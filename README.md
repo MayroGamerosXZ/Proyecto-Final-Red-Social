@@ -23,10 +23,11 @@ Puedes acceder directamente a cualquiera de las rutas del frontend desplegadas e
 
 | Vista | Ruta | Descripción y Funcionalidad |
 | :--- | :--- | :--- |
-| **Feed Principal** | [`/`](https://proyecto-final-red-social.vercel.app/) | Feed con pestañas *Para ti* y *Siguiendo*, publicación con subida de fotos y contadores en vivo. |
+| **Feed Principal** | [`/`](https://proyecto-final-red-social.vercel.app/) | Feed con pestañas *Para ti* y *Siguiendo*, publicación con subida de fotos, reacciones multi-emoji y Modo Invitado. |
 | **Publicaciones Guardadas** | [`/saved`](https://proyecto-final-red-social.vercel.app/saved) | Colección personal de publicaciones marcadas para leer más tarde. |
-| **Iniciar Sesión** | [`/login`](https://proyecto-final-red-social.vercel.app/login) | Formulario de autenticación con validación visual y generación de sesión JWT. |
+| **Iniciar Sesión / Invitado** | [`/login`](https://proyecto-final-red-social.vercel.app/login) | Formulario de autenticación JWT y acceso directo a **Modo Invitado (Solo Lectura)**. |
 | **Crear Cuenta** | [`/register`](https://proyecto-final-red-social.vercel.app/register) | Registro de nuevos usuarios con hash de contraseña `bcrypt` y validación Zod. |
+| **Perfil: Ing. Yoel Monzón** | [`/profile/yoel_monzon`](https://proyecto-final-red-social.vercel.app/profile/yoel_monzon) | Perfil oficial del Evaluador con **Server-Side Rendering (SSR)** y estadísticas en tiempo real. |
 | **Perfil: Mayro Gameros** | [`/profile/mayro_xz`](https://proyecto-final-red-social.vercel.app/profile/mayro_xz) | Perfil con **Server-Side Rendering (SSR)**, edición de foto/avatar y conteo de seguidores. |
 | **Perfil: Carlos Mendoza** | [`/profile/carlos_dev`](https://proyecto-final-red-social.vercel.app/profile/carlos_dev) | Perfil SSR, botón interactivo de *Seguir/Dejar de seguir* y lista de publicaciones. |
 | **Perfil: Ana Gómez** | [`/profile/ana_tech`](https://proyecto-final-red-social.vercel.app/profile/ana_tech) | Perfil SSR con publicaciones multimedia y relaciones sociales en tiempo real. |
@@ -76,13 +77,120 @@ Todos los endpoints están desplegados en Render y responden públicamente en fo
 
 ---
 
-## 👥 Credenciales Oficiales de Prueba (Base de Datos Inicial)
+## 👥 Credenciales Oficiales de Prueba y Evaluación
 
-| Usuario | Correo Electrónico | Contraseña | Rol / Propósito |
-| :--- | :--- | :--- | :--- |
-| **Mayro Gameros** | `mayro@example.com` | `Password123!` | Cuenta Principal / Creador (`@mayro_xz`) |
-| **Carlos Mendoza** | `carlos@example.com` | `Password123!` | Usuario para prueba de doble ventana (`@carlos_dev`) |
-| **Ana Gómez** | `ana@example.com` | `Password123!` | Diseñadora UI/UX (`@ana_tech`) |
+Además del **Modo Invitado (Solo Lectura)** disponible directamente en `/login`, puedes iniciar sesión con cualquiera de las siguientes cuentas registradas en la base de datos de producción:
+
+| # | Nombre Completo | Usuario (`@`) | Correo Electrónico | Contraseña | Rol / Propósito |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Ing. Yoel Monzón** | `@yoel_monzon` | `yoel@example.com` | `Password123!` | Ingeniero y Catedrático de Desarrollo Web \| Evaluador Oficial |
+| **2** | **Mayro Gameros** | `@mayro_xz` | `mayro@example.com` | `Password123!` | Cuenta Principal / Creador del Proyecto |
+| **3** | **Carlos Mendoza** | `@carlos_dev` | `carlos@example.com` | `Password123!` | Fullstack Developer (ideal para prueba en paralelo / incógnito) |
+| **4** | **Ana Gómez** | `@ana_tech` | `ana@example.com` | `Password123!` | Diseñadora UI/UX y Frontend Specialist |
+| **5** | **Nico Robin** | `@Robin` | `nicorobin@example.com` | `Robin302019` | Usuario de pruebas de mensajería y feed |
+| **6** | **Nami Navegante** | `@Nami` | `nami@example.com` | `Password123!` | Usuario de pruebas secundarias |
+| **7** | **Jose Herhandez** | `@joseh` | `guallo1204@gmail.com` | `Password123!` | Estudiante UMG |
+| **8** | **Pablo Sanchéz** | `@pablos` | `userpruebas2026@gmail.com` | `Password123!` | Estudiante UMG |
+| **9** | **Luis Connor** | `@luisc` | `connorpruebas13@gmail.com` | `Password123!` | Estudiante UMG |
+
+---
+
+## 📂 Estructura Completa del Proyecto (Monorepo 3 Capas)
+
+El proyecto está organizado bajo una arquitectura **Fullstack Monorepo** desacoplada en tres capas (Presentación SSR/CSR, Lógica de Negocio REST/WebSockets y Persistencia Relacional PostgreSQL):
+
+```text
+Proyecto-Final-Red-Social/
+├── docker-compose.yml                  # Orquestación multicontenedor (PostgreSQL + Backend + Frontend)
+├── README.md                           # Documentación técnica, guía de instalación y arquitectura
+│
+├── backend/                            # Servidor API REST + WebSockets (Node.js + Express + TS)
+│   ├── Dockerfile                      # Imagen Docker de producción para el Backend
+│   ├── prisma/
+│   │   ├── schema.prisma               # Esquema relacional (User, Post, Comment, Like, Follow, Notification, Bookmark, Message)
+│   │   └── seed.ts                     # Poblado inicial de usuarios (incluyendo @yoel_monzon, @mayro_xz, etc.)
+│   └── src/
+│       ├── server.ts                   # Punto de entrada HTTP + Inicialización CORS, Swagger y Socket.io
+│       ├── config/
+│       │   ├── db.ts                   # Instancia singleton de PrismaClient
+│       │   └── env.ts                  # Variables de entorno tipadas
+│       ├── middlewares/
+│       │   ├── authMiddleware.ts       # Protección JWT (authenticateJWT) y modo híbrido (optionalAuth)
+│       │   ├── validateRequest.ts      # Middleware validador de esquemas Zod (body y params)
+│       │   └── errorHandler.ts         # Manejo centralizado de errores HTTP
+│       ├── schemas/                    # Validaciones estrictas con Zod
+│       │   ├── auth.schema.ts          # Registro, login y actualización de perfil
+│       │   ├── post.schema.ts          # Creación, edición y parámetros de publicaciones
+│       │   └── comment.schema.ts       # Validación de comentarios (1 a 500 caracteres)
+│       ├── controllers/                # Lógica de negocio por dominio
+│       │   ├── auth.controller.ts      # Registro, Login JWT y sesión actual (/me)
+│       │   ├── post.controller.ts      # Feed global, feed siguiendo, CRUD posts, reacciones multi-emoji, comentarios y guardados
+│       │   ├── user.controller.ts      # Perfiles públicos, sugerencias y sistema Follow/Unfollow
+│       │   ├── message.controller.ts   # Chat directo 1-a-1 y confirmación de lectura (visto ✓ / doble visto ✓✓)
+│       │   ├── notification.controller.ts # Historial y lectura de notificaciones
+│       │   ├── search.controller.ts    # Búsqueda avanzada en vivo de usuarios y publicaciones
+│       │   └── upload.controller.ts    # Subida de imágenes a Cloudinary / Base64
+│       ├── routes/                     # Definición de endpoints REST + anotaciones @openapi
+│       │   ├── auth.routes.ts          # /api/auth/*
+│       │   ├── post.routes.ts          # /api/posts/*
+│       │   ├── user.routes.ts          # /api/users/*
+│       │   ├── message.routes.ts       # /api/messages/*
+│       │   ├── notification.routes.ts  # /api/notifications/*
+│       │   ├── search.routes.ts        # /api/search
+│       │   └── upload.routes.ts        # /api/upload
+│       ├── sockets/
+│       │   └── socket.server.ts        # Eventos en tiempo real (likes, comentarios, notificaciones, chat y doble visto)
+│       └── swagger/
+│           └── swagger.config.ts       # Configuración interactiva OpenAPI 3.0 (/api/docs)
+│
+└── frontend/                           # Aplicación Web Cliente y SSR (Next.js 14 + React + Tailwind CSS)
+    ├── Dockerfile                      # Imagen Docker para el Frontend
+    ├── public/
+    │   ├── logo-icon.png               # Isotipo oficial circular del pulso
+    │   └── logo-full.png               # Logotipo completo SocialPulse
+    └── src/
+        ├── app/                        # Rutas del App Router de Next.js
+        │   ├── layout.tsx              # Layout raíz con Providers (Tema, Auth, Socket, Chat), Navbar y Messenger
+        │   ├── page.tsx                # Feed Principal ("Para ti" / "Siguiendo", filtros y Modo Invitado)
+        │   ├── (auth)/
+        │   │   ├── login/page.tsx      # Inicio de sesión + Botón de Modo Invitado (Solo Lectura)
+        │   │   └── register/page.tsx   # Registro de nuevas cuentas
+        │   ├── profile/[username]/
+        │   │   └── page.tsx            # Página de Perfil con Server-Side Rendering (SSR) en paralelo y SEO dinámico
+        │   └── saved/
+        │       └── page.tsx            # Colección privada de publicaciones guardadas (Bookmarks)
+        ├── components/                 # Componentes modulares de interfaz (UI)
+        │   ├── Navbar.tsx              # Barra superior con Logo estilo Facebook, Buscador en vivo, Tema y Avisos
+        │   ├── LeftSidebar.tsx         # Menú lateral izquierdo y Tendencias (#hashtags)
+        │   ├── RightSidebar.tsx        # Sugerencias ("A quién seguir") y tarjeta de estado Swagger API
+        │   ├── CreatePostCard.tsx      # Creador de publicaciones con subida de fotos y selector de emojis
+        │   ├── PostCard.tsx            # Tarjeta de post con reacciones multi-emoji, comentarios en vivo, edición y compartir
+        │   ├── ProfileView.tsx         # Vista completa de perfil (Pestañas: Publicaciones, Fotos, Información)
+        │   ├── MessengerWidget.tsx     # Ventana flotante de Chat Directo 1-a-1 con visto (✓) y doble visto (✓✓)
+        │   ├── SearchAutocomplete.tsx  # Buscador predictivo con debounce (300ms)
+        │   ├── NotificationBell.tsx    # Campana de notificaciones en tiempo real
+        │   └── BottomNav.tsx           # Navegación inferior adaptativa para dispositivos móviles
+        ├── context/                    # Estado global de React
+        │   ├── AuthContext.tsx         # Gestión de sesión JWT y Modo Invitado (isGuest)
+        │   ├── SocketContext.tsx       # Conexión persistente de Socket.io
+        │   ├── ChatContext.tsx         # Estado global de conversaciones y mensajes no leídos
+        │   └── ThemeContext.tsx        # Conmutador Dark Pulse (Modo Oscuro) / Modo Claro
+        ├── lib/
+        │   └── api.ts                  # Cliente HTTP centralizado con inyección automática de Bearer Token
+        └── types/
+            └── index.ts                # Interfaces TypeScript compartidas (User, Post, Comment, Message, Notification)
+```
+
+### Módulos Funcionales en Operación
+
+| Módulo | Archivos Principales | Descripción Funcional |
+| :--- | :--- | :--- |
+| **Autenticación + Modo Invitado** | `auth.controller.ts`, `AuthContext.tsx`, `login/page.tsx` | Registro/Login con JWT + `bcrypt`, y acceso de **Solo Lectura** para visitantes sin cuenta. |
+| **Feed Dual y Publicaciones** | `post.controller.ts`, `page.tsx`, `PostCard.tsx` | Creación, edición, eliminación, soporte de imágenes, hashtags interactivos y reacciones multi-emoji (`❤️`, `🔥`, `😂`, `👏`, `🚀`, `😍`). |
+| **Perfiles SSR y Seguimiento** | `profile/[username]/page.tsx`, `ProfileView.tsx` | Renderizado en el servidor (SSR) en paralelo (`Promise.all`), galería de fotos del usuario y seguimiento mutuo. |
+| **Mensajería Directa 1-a-1** | `message.controller.ts`, `MessengerWidget.tsx` | Chat flotante en tiempo real con indicador de enviado (`✓` gris) y leído (`✓✓` índigo) vía WebSockets. |
+| **Guardados (Bookmarks)** | `saved/page.tsx`, `post.controller.ts` | Colección privada de publicaciones favoritas sincronizada en PostgreSQL. |
+| **Búsqueda Predictiva y Tema** | `SearchAutocomplete.tsx`, `ThemeContext.tsx` | Autocompletado instantáneo de usuarios/posts y soporte nativo para modo claro y oscuro (*Dark Pulse*). |
 
 ---
 
