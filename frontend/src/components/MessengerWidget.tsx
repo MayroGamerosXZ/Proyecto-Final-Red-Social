@@ -66,6 +66,11 @@ export const MessengerWidget: React.FC = () => {
     const handleIncoming = (msg: Message) => {
       if (msg.senderId === activeTarget.id) {
         setMessages((prev) => [...prev, msg]);
+        if (isOpen) {
+          api.getMessages(activeTarget.id)
+            .then(() => refreshConversations())
+            .catch(() => {});
+        }
       }
     };
 
@@ -84,7 +89,7 @@ export const MessengerWidget: React.FC = () => {
       socket.off('chat:message_received', handleIncoming);
       socket.off('chat:messages_read', handleMessagesRead);
     };
-  }, [socket, activeTarget, user?.id]);
+  }, [socket, activeTarget, user?.id, isOpen, refreshConversations]);
 
   if (!isAuthenticated || !isOpen) {
     return null;
